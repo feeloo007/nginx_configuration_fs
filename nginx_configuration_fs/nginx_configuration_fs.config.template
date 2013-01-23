@@ -1,0 +1,17 @@
+{
+    "root_agnostic_configuration"	: "/etc/mdp/web.d/", 
+    "root_nginx_configuration"		: "/etc/mdp/nginx.d/", 
+    "user_owner"			: "nginx",
+    "group_owner"			: "nginx",
+    "resolver_conf"			: "/etc/mdp/resolv.d/NGINX",
+    "mount_filename"			: "mount",
+    "unmount_filename"			: "unmount",
+    "redirect_filename"			: "redirect",
+    "error_status_filename"		: ".error.status",
+    "restart_nginx"			: "sudo /etc/rc.d/init.d/nginx configtest && sudo /etc/rc.d/init.d/nginx condrestart",
+    "root_ssl_configuration"		: "/etc/mdp/ssl.d/",
+    "ssl_certificate_filename"		: "cert.pem",
+    "ssl_certificate_key_filename"	: "cert.key",
+    "root_url2app_configuration"	: "/etc/mdp/app.d/",
+    "url2app_filename"			: "url2app"
+}
