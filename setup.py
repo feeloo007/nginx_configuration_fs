@@ -26,6 +26,9 @@ setup(name='nginx_configuration_fs',
           'dnspython==1.10.0',
           'pyinotify==0.9.4',
           'jinja2==2.6',
+          'pyOpenSSL==0.13',
+          'regex==0.1.20121216',
+          'rfc3987==1.3.1',
       ],
       entry_points="""
       # -*- Entry points: -*-
