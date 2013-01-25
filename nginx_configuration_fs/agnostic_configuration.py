@@ -444,9 +444,17 @@ class AgnosticConfiguration():
 
             # Si le repertoire ne contient pas de configuration
             # de port, la configuration n'est pas prise en compte
-            if not os.listdir( self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + server ):
-                l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_agnostic_configuration, server, ) )
-                continue
+            try:
+                if not os.listdir( self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + server ):
+                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_agnostic_configuration, server, ) )
+                    continue
+            except:
+                    # En cas de suppression de la racine
+                    # entre le listdir dans la boucle
+                    # et l'usage du server dans la cronstrcuion
+                    # de chemin, le repertoire server
+                    # peut avoir disparu.
+                    continue
 
             # Recherche des ports
             for port in [ 
@@ -535,24 +543,32 @@ class AgnosticConfiguration():
                     except:
                         pass
 
-                if \
-                    not os.path.isfile( mount_filepath ) 			and	\
-                    not os.path.isfile( unmount_filepath ) 			and 	\
-                    not os.path.isfile( redirect_filepath ):
-                   l_bad_configurations.append( 
-                       ( 
-                           'no %s or %s or %s file' % \
-                               ( 
-                                   self._mount_filename, 
-                                   self._unmount_filename, 
-                                   self._redirect_filename 
-                               ), 
-                           self._root_agnostic_configuration, 
-                           server, 
-                           port 
-                       ) 
-                   )
-                   continue
+                try:
+                    if \
+                        not os.path.isfile( mount_filepath ) 			and	\
+                        not os.path.isfile( unmount_filepath ) 			and 	\
+                        not os.path.isfile( redirect_filepath ):
+                       l_bad_configurations.append( 
+                           ( 
+                               'no %s or %s or %s file' % \
+                                   ( 
+                                       self._mount_filename, 
+                                       self._unmount_filename, 
+                                       self._redirect_filename 
+                                   ), 
+                               self._root_agnostic_configuration, 
+                               server, 
+                               port 
+                           ) 
+                       )
+                       continue
+                except:
+                    # En cas de suppression de la racine
+                    # entre le listdir dans la boucle
+                    # et l'usage du server dans la cronstrcuion
+                    # de chemin, le repertoire server
+                    # peut avoir disparu.
+                    continue
 
                 add_to_configuration( 
                     self._mount_filename, 	

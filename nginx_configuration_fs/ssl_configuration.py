@@ -210,9 +210,16 @@ class SSLConfiguration():
                 l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_ssl_configuration, server, ) )
                 continue
 
-
-            if not os.listdir( self._root_ssl_configuration.rstrip( os.sep ) + os.sep + server ):
-                l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_ssl_configuration, server, ) )
+            try:
+                if not os.listdir( self._root_ssl_configuration.rstrip( os.sep ) + os.sep + server ):
+                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_ssl_configuration, server, ) )
+                    continue
+            except:
+                # En cas de suppression de la racine
+                # entre le listdir dans la boucle
+                # et l'usage du server dans la cronstrcuion
+                # de chemin, le repertoire server
+                # peut avoir disparu.
                 continue
 
             # Recherche des ports
@@ -247,24 +254,32 @@ class SSLConfiguration():
                     port + os.sep + 							\
                     self._ssl_certificate_key_filename
 
-                if \
-                    not ( 								\
-                         os.path.isfile( ssl_certificate_filepath ) 		and	\
-                         os.path.isfile( ssl_certificate_key_filepath )
-                   ):
-                   l_bad_configurations.append( 
-                       ( 
-                           '%s AND %s must be present' % \
-                               ( 
-                                   self._ssl_certificate_filename, 
-                                   self._ssl_certificate_key_filename, 
-                               ), 
-                           self._root_ssl_configuration, 
-                           server, 
-                           port 
-                       ) 
-                   )
-                   continue
+                try:
+                    if \
+                        not ( 								\
+                             os.path.isfile( ssl_certificate_filepath ) 	and	\
+                             os.path.isfile( ssl_certificate_key_filepath )
+                       ):
+                       l_bad_configurations.append( 
+                           ( 
+                               '%s AND %s must be present' % \
+                                   ( 
+                                       self._ssl_certificate_filename, 
+                                       self._ssl_certificate_key_filename, 
+                                   ), 
+                               self._root_ssl_configuration, 
+                               server, 
+                               port 
+                           ) 
+                       )
+                       continue
+                except:
+                    # En cas de suppression de la racine
+                    # entre le listdir dans la boucle
+                    # et l'usage du server dans la cronstrcuion
+                    # de chemin, le repertoire server
+                    # peut avoir disparu.
+                    continue
 
                 st_certificate_key_filepath 	= os.stat( ssl_certificate_key_filepath )
 

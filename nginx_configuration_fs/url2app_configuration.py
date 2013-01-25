@@ -273,11 +273,20 @@ class URL2AppConfiguration():
                 continue
 
 
-            # Si le repertoire ne contient pas de configuration
-            # de port, la configuration n'est pas prise en compte
-            if not os.listdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + server ):
-                l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_url2app_configuration, server, ) )
+            try:
+                # Si le repertoire ne contient pas de configuration
+                # de port, la configuration n'est pas prise en compte
+                if not os.listdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + server ):
+                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_url2app_configuration, server, ) )
+                    continue
+            except:
+                # En cas de suppression de la racine
+                # entre le listdir dans la boucle
+                # et l'usage du server dans la cronstrcuion
+                # de chemin, le repertoire server
+                # peut avoir disparu.
                 continue
+
 
             # Recherche des ports
             for port in [ 
