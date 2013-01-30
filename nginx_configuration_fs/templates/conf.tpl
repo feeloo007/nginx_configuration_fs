@@ -13,7 +13,8 @@ server {
     ssl_certificate_key		{{ ssl_configuration.ssl_certificate_key_filepath }};
     {% endif -%}
      
-    error_log 			/var/log/nginx/{{ server }}-{{ port }}.error.log info;
+    access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log combined;
+    error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
 
     proxy_set_header		Host $host;
     proxy_set_header    	X-Real-IP       $remote_addr;
