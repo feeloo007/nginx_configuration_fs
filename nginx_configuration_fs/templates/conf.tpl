@@ -1,3 +1,7 @@
+log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_local] "$request" '
+                 '$status $body_bytes_sent "$http_referer" '
+                 '"$http_user_agent" "$scheme://$host:$server_port$uri"';
+
 server {
 
     server_tokens 		off;
@@ -12,14 +16,15 @@ server {
     ssl_certificate 		{{ ssl_configuration.ssl_certificate_filepath }};
     ssl_certificate_key		{{ ssl_configuration.ssl_certificate_key_filepath }};
     {% endif -%}
-     
-    access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log combined;
-    error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
 
+    access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
+    error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
+     
     proxy_set_header		Host $host;
     proxy_set_header    	X-Real-IP       $remote_addr;
     proxy_set_header    	X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_hide_header   	X-Powered-By;
+
 
     #proxy_intercept_errors 	on;
     proxy_buffering on;
