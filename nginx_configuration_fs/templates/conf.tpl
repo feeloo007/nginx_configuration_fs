@@ -17,7 +17,11 @@ server {
     ssl_certificate_key		{{ ssl_configuration.ssl_certificate_key_filepath }};
     {% endif -%}
 
+{% if server == 'Z00-PR-D1-NGX01' and port == '80' %}
+    access_log 			/$access_log_Z00_PR_D1_NGX01__80	combined;
+{% else %}
     access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
+{% endif %}
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
     proxy_set_header		Host $host;
@@ -100,3 +104,7 @@ include {{ root_nginx_configuration }}{{ converted_mount_map_filename }};
 {% else -%}
 # Pas de map mount pour ce serveur
 {% endif -%}
+
+{% if server == 'Z00-PR-D1-NGX01' and port == '80' %}
+include /etc/mdp/tmp.d/Z00-PR-D1-NGX01-80.tmp;
+{% endif %}
