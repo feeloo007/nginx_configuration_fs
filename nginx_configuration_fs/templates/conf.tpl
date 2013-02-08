@@ -20,17 +20,6 @@ server {
     access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
-    proxy_set_header		Host $host;
-    proxy_set_header    	X-Real-IP       $remote_addr;
-    proxy_set_header    	X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_hide_header   	X-Powered-By;
-
-
-    #proxy_intercept_errors 	on;
-    proxy_buffering on;
-
-    proxy_connect_timeout       2s;
-    proxy_read_timeout          10s;
 
     root                        /usr/share/nginx/html/;
 
@@ -59,10 +48,6 @@ server {
 
     {% if converted_mount_map_filename in list_converted_map_filenames %}
 
-        # Remplacer par location @backend dans l'eventualite de l'utilisation de mod_security
-        #proxy_redirect 	$backprx_and_prefix_uri_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
-        #proxy_pass     	$backprx_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
-
         # Construction permettant d'utiliser location @backend et de servir les pages d'erreurs
         # Si $uri = egal une page d'erreur, c'est la page d'erreur qui est servie
         try_files               $uri 	@backend;
@@ -76,8 +61,21 @@ server {
     {% if converted_mount_map_filename in list_converted_map_filenames %}
 
     location @backend {
-        proxy_redirect 	$backprx_and_prefix_uri_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
-        proxy_pass     	$backprx_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+
+        #proxy_intercept_errors 	on;
+        proxy_buffering on;
+
+        proxy_connect_timeout       2s;
+        proxy_read_timeout          10s;
+
+        proxy_set_header	Host 		$host;
+        proxy_set_header    	X-Real-IP       $remote_addr;
+        proxy_set_header    	X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_hide_header   	X-Powered-By;
+
+        proxy_redirect 		$backprx_and_prefix_uri_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
+        proxy_pass     		$backprx_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+
     }
     {% endif %}
 
