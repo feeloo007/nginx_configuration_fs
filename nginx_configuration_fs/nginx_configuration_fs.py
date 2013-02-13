@@ -31,6 +31,12 @@ import	ssl_configuration
 
 class NGINXConfigurationFS(LoggingMixIn, Operations):
 
+    __READ_CTX__			= 'READ_CTX'
+    __ATTR_CTX__			= 'ATTR_CTX'
+    __ID_SERVER__			= 'ID_SERVER'
+    __ID_PORT__				= 'ID_PORT'
+    __ID_MAPPING_TYPE__			= 'ID_MAPPING_TYPE'
+
     def __init__(
         self,
         agnostic_configuration,
@@ -84,6 +90,80 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                     )
             )
 
+        # Gestion des interactions cross mapping
+        # Les tableaux agnostic vers virtuel permettent de calculer
+        # les dependances engendrer par les modificatinos dans agnostic
+        self._d_id_server_agnostic_2_virtual		= {}
+        self._d_id_port_agnostic_2_virtual		= {}
+        self._d_id_mapping_type_agnostic_2_virtual	= {
+            self._mount_filename:    [
+                self._mount_filename,
+                self._redirect_filename
+            ],
+            self._redirect_filename: [
+                self._redirect_filename,
+                self._mount_filename
+            ],
+            self._unmount_filename: [
+                self._unmount_filename,
+                self._mount_filename
+            ],
+        }
+
+        # la gestion cross mapping dnas le sens virtuel a agnostic
+        # est plus compliquee
+        # Au premier niveau, elle est contextualisee
+        # NGINXConfigurationFS.__ATTR_CTX__ pour le cross mapping
+        # concernant l'obtention des attributs de fichiers (getattr)
+        # NGINXConfigurationFS.__READ_CTX__ pour le crosss mapping
+        # concernant la lecture (read)
+        # Elle est ensuite categorisee par id (server, port, mapping_ype).
+        # Puis les cross mappings eux-memes sont exprimes
+        self._d_id_virtual_2_agnostic				= {
+            NGINXConfigurationFS.__ATTR_CTX__:			\
+	        {
+                     NGINXConfigurationFS.__ID_SERVER__:	\
+                         {
+                         },
+                     NGINXConfigurationFS.__ID_PORT__:		\
+                         {
+                         },
+                     NGINXConfigurationFS.__ID_MAPPING_TYPE__:	\
+                         {
+                             self._mount_filename:		\
+                                 [
+                                     self._mount_filename,
+                                     self._redirect_filename,
+                                     self._unmount_filename,
+                                 ],
+                             self._redirect_filename: 		\
+                                 [
+                                     self._redirect_filename,
+                                     self._mount_filename
+                                 ],
+                             self._unmount_filename: 		\
+                                 [ self._unmount_filename ],
+                         },
+                },
+            NGINXConfigurationFS.__READ_CTX__:			\
+	        {
+                     NGINXConfigurationFS.__ID_SERVER__:	\
+                         {
+                         },
+                     NGINXConfigurationFS.__ID_PORT__:		\
+                         {
+                         },
+                     NGINXConfigurationFS.__ID_MAPPING_TYPE__:	\
+                         {
+                             self._mount_filename:		\
+                                 [ self._mount_filename ],
+                             self._redirect_filename: 		\
+                                 [ self._redirect_filename ],
+                             self._unmount_filename: 		\
+                                 [ self._unmount_filename ],
+                         },
+                },
+        }
 
         wm 					= pyinotify.WatchManager() 
 	mask 					= pyinotify.IN_MODIFY
@@ -237,13 +317,59 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_nginx_fs )
     def get_list_converted_map_filenames( self ):
 
-        return sorted(
-            map(
-                lambda ( server, port, mapping_type ): self.get_converted_map_filename( server, port, mapping_type ),
-                self._agnostic_configuration.id_configurations
+        def process_id_configuration( id_configuration ):
+
+            return 	\
+                reduce(
+                    list.__add__,
+                    reduce(
+                        list.__add__,
+                        map(
+                            lambda server:
+                                 map(
+                                     lambda port:
+                                         map(
+                                             lambda mapping_type:
+                                                 [ server, port, mapping_type ],
+                                                 self._d_id_mapping_type_agnostic_2_virtual.get(
+                                                     id_configuration[ 2 ],
+                                                     [ id_configuration[ 2 ] ]
+                                                 )
+                                         ),
+                                         self._d_id_port_agnostic_2_virtual.get(
+                                             id_configuration[ 1 ],
+                                             [ id_configuration[ 1 ] ]
+                                         )
+                                 ),
+                            self._d_id_server_agnostic_2_virtual.get(
+                                 id_configuration[ 0 ],
+                                 [ id_configuration[ 0 ] ]
+                            )
+                        )
+                    )
+                )
+
+        return 		\
+            sorted(
+                list(
+                    set(
+                        map(
+                            lambda ( server, port, mapping_type ): 	\
+                                self.get_converted_map_filename( server, port, mapping_type ),
+                            reduce(
+                                list.__add__,
+                                map(
+                                    process_id_configuration,
+                                    self._agnostic_configuration.id_configurations
+                                ) or [ [] ]
+                            )
+                        )
+                    )
+                )
             )
-        )
+
     list_converted_map_filenames 	= property( get_list_converted_map_filenames, None, None )
+
 
 
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_nginx_fs )
@@ -252,7 +378,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
 
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_nginx_fs )
-    def get_id_from_filename_elements( self, path_elements ):
+    def get_id_from_filename_elements( self, path_elements, ctx ):
+        """
+           path_elements est une liste d'elements composants le nom du fichier
+           with_resolved_cross_mapping permet de specifier qu'on recherche
+           le fichier correspondant uniquement aux criteres du path_elements
+           ou qu'on applique les maping provenant des tableaux *virtual_2_agnostic_attrctx
+        """
         if 	len( path_elements ) == 0:
             return ( '.*', '.*', '.*' )
         elif 	len( path_elements ) == 1:
@@ -268,8 +400,18 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             if m_id:
 
                 return ( 
-                    m_id.group( 'server' ), 
-                    m_id.group( 'port' ),
+                    '|'.join(
+                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
+                            m_id.group( 'server' ),
+                            [ m_id.group( 'server' ) ]
+                        )
+                    ),
+                    '|'.join(
+                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
+                            m_id.group( 'port' ),
+                            [ m_id.group( 'port' ) ]
+                        )
+                    ),
                     '.*',
                 )
 
@@ -280,10 +422,25 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
             if m_id:
 
-                return ( 
-                    m_id.group( 'server' ), 
-                    m_id.group( 'port' ),
-                    m_id.group( 'mapping_type' ),
+                return (
+                    '|'.join(
+                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
+                            m_id.group( 'server' ),
+                            [ m_id.group( 'server' ) ]
+                        )
+                    ),
+                    '|'.join(
+                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
+                            m_id.group( 'port' ),
+                            [ m_id.group( 'port' ) ]
+                        )
+                    ),
+                    '|'.join(
+                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_MAPPING_TYPE__ ].get(
+                            m_id.group( 'mapping_type' ),
+                            [ m_id.group( 'mapping_type' ) ]
+                        )
+                    ),
                 )
 
             raise FuseOSError( ENOENT )
@@ -297,19 +454,28 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
     def getattr(self, path, fh=None):
 
         path_elements           = filter( None,  path.split( '/' ) )
-      
+
         st = dict(
             st_mode	=	( ( S_IFDIR | 0755 ) if len( path_elements ) == 0 else ( S_IFREG | 0644 ) ), 
             st_nlink	=	2, 
             st_size	= 	( 4096 * int( 1 + ceil( len( self.readdir( path ) ) / 4096 ) ) ) if len( path_elements ) == 0 else len( self.read( path, -1, 0, fh ) ),
             st_atime 	= 	self._agnostic_configuration.get_last_atime(
-                                    *self.get_id_from_filename_elements( path_elements )
+                                    *self.get_id_from_filename_elements(
+                                        path_elements,
+                                        NGINXConfigurationFS.__ATTR_CTX__
+                                    )
                                 ),
             st_ctime 	= 	self._agnostic_configuration.get_last_ctime(
-                                    *self.get_id_from_filename_elements( path_elements )
+                                    *self.get_id_from_filename_elements(
+                                        path_elements,
+                                        NGINXConfigurationFS.__ATTR_CTX__
+                                    )
                                 ),
             st_mtime 	= 	self._agnostic_configuration.get_last_mtime(
-                                    *self.get_id_from_filename_elements( path_elements )
+                                    *self.get_id_from_filename_elements(
+                                        path_elements,
+                                        NGINXConfigurationFS.__ATTR_CTX__
+                                    )
                                 ), 
             st_uid	=	self._uid_owner,
             st_gid	=	self._gid_owner,
@@ -323,7 +489,10 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         path_elements           = filter( None,  path.split( '/' ) )
 
-        if self.get_id_from_filename_elements( path_elements ):
+        if self.get_id_from_filename_elements(
+            path_elements,
+            True
+        ):
 
             return [ '.', '..' ] +					\
                    self.list_converted_conf_filenames + 		\
@@ -353,9 +522,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                     raise FuseOSError( ENOENT )
 
             # Appele vevant une exception si l'entite n'existe pas
-            pattern_server, 		\
-	    pattern_port, 		\
-	    pattern_mapping_type	= self.get_id_from_filename_elements( path_elements )
+            pattern_server, 			\
+	    pattern_port, 			\
+	    pattern_mapping_type	= 	\
+                self.get_id_from_filename_elements(
+                    path_elements,
+                    NGINXConfigurationFS.__READ_CTX__
+                )
 
             # Si l'element est une configuration
             if path_elements[ 0 ] in self.list_converted_conf_filenames:
@@ -364,7 +537,6 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             #if True:
             try:
             # Si l'element est une map
-                
                 return self.read_map( pattern_server, pattern_port, pattern_mapping_type )
 
             except:

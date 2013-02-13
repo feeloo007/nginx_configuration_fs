@@ -676,19 +676,14 @@ class AgnosticConfiguration():
         pattern_port 		= '.*', 
         pattern_mapping_type 	= '.*' 
     ):
-        d_pattern_mapping_type_2_pattern_mapping_type	= {
-           self._mount_filename		: self._mount_filename,
-           self._unmount_filename	: self._unmount_filename,
-           self._redirect_filename	: self._mount_filename + '|' + self._redirect_filename,
-	} 
 
         return max( 
             map( 
-                lambda filename: fct( filename ),
+                lambda filename: fct( filename ) if os.path.isfile( filename ) else 0,
                 self.get_list_agnostic_configurations_filenames( 
                     pattern_server, 
                     pattern_port, 
-                    d_pattern_mapping_type_2_pattern_mapping_type.get( pattern_mapping_type, pattern_mapping_type ) 
+                    pattern_mapping_type
                 ) 
             ) or [ 0 ]
         )
