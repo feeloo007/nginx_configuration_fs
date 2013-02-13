@@ -38,7 +38,7 @@ server {
         # Pas de configuration unmap pour ce serveur
     {% endif -%}
 
-    {% if converted_redirect_map_filename in list_converted_map_filenames or converted_mount_map_filename in list_converted_map_filenames %}
+    {% if converted_redirect_map_filename in list_converted_map_filenames %}
         if ( $redirect_to_{{ suffix_map }} ) {
             return 		302 	$redirect_to_{{ suffix_map }};
         }
@@ -87,7 +87,7 @@ include {{ root_nginx_configuration }}{{ converted_unmount_map_filename }};
 # Pas de map unmap pour ce serveur
 {% endif -%}
 
-{% if converted_redirect_map_filename in list_converted_map_filenames or converted_mount_map_filename in list_converted_map_filenames -%}
+{% if converted_redirect_map_filename in list_converted_map_filenames -%}
 include {{ root_nginx_configuration }}{{ converted_redirect_map_filename }};
 {% else -%}
 # Pas de map redirect pour ce serveur
