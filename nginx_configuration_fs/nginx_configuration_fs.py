@@ -505,7 +505,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
     def read(self, path, size, offset, fh = None ):
   
         if offset != 0 or size != -1:
-            return self.read( path, -1, 0, fh )[ offset:size ]
+            return self.read( path, -1, 0, fh )[ offset:offset+size ]
 
         path_elements           = filter( None,  path.split( '/' ) )
 
