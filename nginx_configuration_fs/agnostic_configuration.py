@@ -122,11 +122,45 @@ class AgnosticConfiguration():
             'src_'
         )
 
+        def get_upstream_name( d ):
+            return '%s__%s_%s__%s' % (
+                server,
+                port,
+                d[ 'dst_host' ],
+                d[ 'dst_port' ]
+        )
+
+        def get_upstream_url( d ):
+            uri = ''
+            uri += d[ 'dst_scheme' ] + ':'
+            uri += '//'
+            if  d.get( 'dst_userinfo' ):
+                uri += d[ 'dst_userinfo' ] + '@'
+            uri += get_upstream_name( d )
+            uri += d[ 'dst_path' ] or ''
+            if  d.get( 'dst_query' ):
+                uri += '?' + d[ 'dst_query' ]
+            if  d.get( 'dst_fragment' ):
+                uri += '#' + d[ 'dst_fragment' ]
+            return uri
+
         AgnosticConfiguration.add_to_configuration( 
             d, 
             lambda d: {
-                        'src': d[ 'src_URI' ],
-                        'dst': d[ 'dst_URI' ],
+                        'src':
+                            d[ 'src_URI' ],
+                        'dst':
+                            d[ 'dst_URI' ],
+                        'dst_scheme':
+                            d[ 'dst_scheme' ],
+                        'dst_host':
+                            d[ 'dst_host' ],
+                        'dst_port':
+                            str( d[ 'dst_port' ] ),
+                        'dst_upstream_name':
+                            get_upstream_name( d ),
+                        'dst_upstream':
+                            get_upstream_url( d ),
                     }, 
             d_configurations,
             filepath,
