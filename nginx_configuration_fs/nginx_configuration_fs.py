@@ -503,7 +503,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_nginx_fs )
     def read(self, path, size, offset, fh = None ):
-  
+
         if offset != 0 or size != -1:
             return self.read( path, -1, 0, fh )[ offset:offset+size ]
 
@@ -601,6 +601,16 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_nginx_fs )
     def read_conf( self, server, port ):
 
+        l_uniq_upstream	= set()
+
+        def get_ip_for_upstream( host ):
+            try:
+                return self._resolver.query( host, 'A' )[ 0 ].address
+            except:
+                #l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_agnostic_configuration, server, ) )
+                return None
+
+
         return \
             self._env.get_template( 
                 self.get_template_name( 'conf' ) 
@@ -639,7 +649,39 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                 root_nginx_configuration	= \
                     self._root_nginx_configuration.rstrip( os.sep ) + os.sep,
                 ssl_configuration		= \
-                    self._ssl_configuration.get_ssl_configuration( server, port )
+                    self._ssl_configuration.get_ssl_configuration( server, port ),
+                upstream_configuration 		= \
+                    filter(
+                        lambda d: d[ 'name' ] not in l_uniq_upstream
+                        and
+                        (
+                            l_uniq_upstream.add( d[ 'name' ] ) or
+                            d.update( { 'ip': get_ip_for_upstream( d[ 'host' ] ) } ) or
+                            True
+                        ),
+                        [
+                            {
+                                'name':
+                                    d[ 'dst_upstream_name' ],
+                                'host':
+                                    d[ 'dst_host' ],
+                                'port':
+                                    d[ 'dst_port' ],
+                            }
+                            for d in
+                            self._agnostic_configuration.d_configurations[
+                                server
+                            ][
+                                port
+                            ].get(
+                                self._mount_filename,
+                                {},
+                            ).get(
+                                'mappings',
+                                []
+                            )
+                        ]
+                    ),
         ).encode( 'utf-8' )
 
 

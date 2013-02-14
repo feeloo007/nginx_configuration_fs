@@ -2,6 +2,21 @@ log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_lo
                  '$status $body_bytes_sent "$http_referer" '
                  '"$http_user_agent" "$scheme://$host:$server_port$uri"';
 
+{% for upstream in upstream_configuration -%}
+{% if not upstream.ip -%}
+# IMPOSSIBLE DE RESOUDRE {{ upstream.host }} POUR {{ upstream.name }}
+# TODO - IMPLEMENTER UN SERVEUR TECHNIQUE INDIQUANT QUE LE DNS N'EST PAS RESOLVABLE
+
+{% else %}
+upstream {{ upstream.name }} {
+    # resolution de {{ upstream.name }} valide au rafraichissement de FS
+    server {{ upstream.ip }}:{{ upstream. port }};
+    keepalive 16;
+}
+
+{% endif -%}
+{% endfor -%}
+
 server {
 
     server_tokens 		off;
@@ -77,8 +92,11 @@ server {
         proxy_set_header    	X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_hide_header   	X-Powered-By;
 
+        proxy_http_version              1.1;
+        proxy_set_header Connection     "";
+
         proxy_redirect 		$backprx_and_prefix_uri_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
-        proxy_pass     		$backprx_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+        proxy_pass     		$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
 
     }
     {% endif %}
