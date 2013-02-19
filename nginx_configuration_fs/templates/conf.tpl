@@ -47,7 +47,11 @@ server {
 
     location / {
 
+    {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+        root /home/z00_www_static/;
+    {% else %}
         root /usr/share/nginx/html/;
+    {% endif -%}
 
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
         if ( $not_mapped_{{ suffix_map }} ) {
@@ -69,7 +73,21 @@ server {
 
         # Construction permettant d'utiliser location @backend et de servir les pages d'erreurs
         # Si $uri = egal une page d'erreur, c'est la page d'erreur qui est servie
-        try_files               $uri 	@backend;
+        {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+        try_files               /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
+                                /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
+                                /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
+                                /{{server}}/__default__/$www_static_url_2_entity_provisoire/__default__/$uri
+                                /{{server}}/{{port}}/__default__/$host/$uri
+                                /{{server}}/{{port}}/__default__/__default__/$uri
+                                /{{server}}/__default__/__default__/$host/$uri
+                                /{{server}}/__default__/__default__/__default__/$uri
+                                /__default__/__default__/__default__/$host/$uri
+                                /__default__/__default__/__default__/__default__/$uri
+                                @backend;
+         {% else %}
+         try_files		$uri	@backend;
+         {% endif %}
 
 
     {% else %}
@@ -123,4 +141,8 @@ include {{ root_nginx_configuration }}{{ converted_mount_map_filename }};
 
 {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
 include /etc/mdp/tmp.d/access_log_provisoire;
+{% endif %}
+
+{% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+include /etc/mdp/tmp.d/www_static_url_2_entity_provisoire;
 {% endif %}
