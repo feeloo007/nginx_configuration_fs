@@ -32,7 +32,11 @@ server {
     ssl_certificate_key		{{ ssl_configuration.ssl_certificate_key_filepath }};
     {% endif -%}
 
+{% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+    access_log 			/$access_log_provisoire	combined;
+{% else %}
     access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
+{% endif %}
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
 
@@ -116,3 +120,7 @@ include {{ root_nginx_configuration }}{{ converted_mount_map_filename }};
 {% else -%}
 # Pas de map mount pour ce serveur
 {% endif -%}
+
+{% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+include /etc/mdp/tmp.d/access_log_provisoire;
+{% endif %}
