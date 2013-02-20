@@ -67,7 +67,7 @@ server {
                         /{{server}}/__default__/__default__/__default__/$uri
                         /__default__/__default__/__default__/$host/$uri
                         /__default__/__default__/__default__/__default__/$uri
-                        $uri;
+                        =404;
             {% endif -%}
 
         }
@@ -86,7 +86,7 @@ server {
                         /{{server}}/__default__/__default__/__default__/$uri
                         /__default__/__default__/__default__/$host/$uri
                         /__default__/__default__/__default__/__default__/$uri
-                        $uri;
+                        =404;
             {% endif -%}
 
         }
@@ -122,7 +122,6 @@ server {
                                 /{{server}}/__default__/__default__/__default__/$uri
                                 /__default__/__default__/__default__/$host/$uri
                                 /__default__/__default__/__default__/__default__/$uri
-                                $uri
                                 @backend;
          {% else %}
          try_files		$uri	@backend;
