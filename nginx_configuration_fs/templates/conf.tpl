@@ -40,23 +40,22 @@ server {
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
 
-    root                        /usr/share/nginx/html/;
-
     error_page                  404     =404       /no_configuration.txt;
     error_page                  502     =503       /backend_failed.txt;
     error_page                  504     =503       /backend_failed.txt;
 
-    location = /backend_failed.txt {
-        internal;
-    }
-
-    location = /no_configuration.txt {
-        internal;
-    }
 
     location / {
 
         root /usr/share/nginx/html/;
+
+        location = /backend_failed.txt {
+            internal;
+        }
+
+        location = /no_configuration.txt {
+            internal;
+        }
 
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
         if ( $not_mapped_{{ suffix_map }} ) {
