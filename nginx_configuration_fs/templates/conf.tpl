@@ -1,6 +1,6 @@
 log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_local] "$request" '
                  '$status $body_bytes_sent "$http_referer" '
-                 '"$http_user_agent" "$scheme://$host:$server_port$uri"';
+                 '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
 
 {% for upstream in upstream_configuration -%}
 {% if not upstream.ip -%}
