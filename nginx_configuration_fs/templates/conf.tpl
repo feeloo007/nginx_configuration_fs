@@ -42,8 +42,17 @@ server {
 
     root                        /usr/share/nginx/html/;
 
-    error_page                  502     =       /backend_failed.txt;
-    error_page                  504     =       /backend_failed.txt;
+    error_page                  404     =404       /no_configuration.txt;
+    error_page                  502     =503       /backend_failed.txt;
+    error_page                  504     =503       /backend_failed.txt;
+
+    location = /backend_failed.txt {
+        internal;
+    }
+
+    location = /no_configuration.txt {
+        internal;
+    }
 
     location / {
 
