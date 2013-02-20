@@ -56,6 +56,7 @@ server {
         location = /backend_failed.txt {
             internal;
 
+            {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
             try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
                         /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
                         /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
@@ -65,13 +66,16 @@ server {
                         /{{server}}/__default__/__default__/$host/$uri
                         /{{server}}/__default__/__default__/__default__/$uri
                         /__default__/__default__/__default__/$host/$uri
-                        /__default__/__default__/__default__/__default__/$uri;
+                        /__default__/__default__/__default__/__default__/$uri
+                        $uri;
+            {% endif -%}
 
         }
 
         location = /no_configuration.txt {
             internal;
 
+            {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
             try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
                         /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
                         /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
@@ -81,7 +85,9 @@ server {
                         /{{server}}/__default__/__default__/$host/$uri
                         /{{server}}/__default__/__default__/__default__/$uri
                         /__default__/__default__/__default__/$host/$uri
-                        /__default__/__default__/__default__/__default__/$uri;
+                        /__default__/__default__/__default__/__default__/$uri
+                        $uri;
+            {% endif -%}
 
         }
 
@@ -116,6 +122,7 @@ server {
                                 /{{server}}/__default__/__default__/__default__/$uri
                                 /__default__/__default__/__default__/$host/$uri
                                 /__default__/__default__/__default__/__default__/$uri
+                                $uri
                                 @backend;
          {% else %}
          try_files		$uri	@backend;
