@@ -36,10 +36,10 @@ server {
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
 
-    root                        /usr/share/nginx/html/;
+    error_page                  404     =404       /no_configuration.txt;
+    error_page                  502     =503       /backend_failed.txt;
+    error_page                  504     =503       /backend_failed.txt;
 
-    error_page                  502     =       /backend_failed.txt;
-    error_page                  504     =       /backend_failed.txt;
 
     location / {
 
@@ -48,6 +48,38 @@ server {
     {% else %}
         root /usr/share/nginx/html/;
     {% endif -%}
+
+        location = /backend_failed.txt {
+            internal;
+
+            try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri;
+
+        }
+
+        location = /no_configuration.txt {
+            internal;
+
+            try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri;
+
+        }
 
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
         if ( $not_mapped_{{ suffix_map }} ) {
