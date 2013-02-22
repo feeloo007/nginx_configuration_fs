@@ -80,7 +80,7 @@ def common_process_uri(
     uri += d_rfc3987[ 'scheme' ] + ':'
     uri += '//'
     if  d_rfc3987.get( 'userinfo' ):
-        uri += d_rfc3987[ 'query' ] + '@'
+        uri += d_rfc3987[ 'userinfo' ] + '@'
     uri += d_rfc3987[ 'host' ]
     uri += ':%s' % ( d_rfc3987[ 'port' ] )
     uri += d_rfc3987[ 'path' ] or ''
