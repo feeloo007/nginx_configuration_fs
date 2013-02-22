@@ -148,7 +148,9 @@ server {
         proxy_http_version              1.1;
         proxy_set_header Connection     "";
 
-        proxy_redirect 		$backprx_and_prefix_uri_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
+        proxy_redirect 		$proxy_redirect_to_replace_with_port_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
+        proxy_redirect 		$proxy_redirect_to_replace_without_port_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
+
         proxy_pass     		$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
 
     }
