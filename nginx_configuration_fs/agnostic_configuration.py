@@ -144,6 +144,36 @@ class AgnosticConfiguration():
                 uri += '#' + d[ 'dst_fragment' ]
             return uri
 
+
+        def get_proxy_redirect_to_replace_url_with_port( d ):
+            uri 	= ''
+            uri 	+= d[ 'dst_scheme' ] + ':'
+            uri 	+= '//'
+            if  d.get( 'dst_userinfo' ):
+                uri 	+= d[ 'dst_userinfo' ] + '@'
+            uri 	+= d[ 'src_host' ]
+            uri 	+= ':%s' % ( d[ 'dst_port' ] )
+            uri 	+= d[ 'dst_path' ] or ''
+            if  d.get( 'dst_query' ):
+                uri 	+= '?' + d[ 'dst_query' ]
+            if  d.get( 'dst_fragment' ):
+                uri 	+= '#' + d[ 'dst_fragment' ]
+            return uri
+
+        def get_proxy_redirect_to_replace_url_without_port( d ):
+            uri 	= ''
+            uri 	+= d[ 'dst_scheme' ] + ':'
+            uri 	+= '//'
+            if  d.get( 'dst_userinfo' ):
+                uri 	+= d[ 'dst_userinfo' ] + '@'
+            uri 	+= d[ 'src_host' ]
+            uri 	+= d[ 'dst_path' ] or ''
+            if  d.get( 'dst_query' ):
+                uri 	+= '?' + d[ 'dst_query' ]
+            if  d.get( 'dst_fragment' ):
+                uri 	+= '#' + d[ 'dst_fragment' ]
+            return uri
+
         AgnosticConfiguration.add_to_configuration( 
             d, 
             lambda d: {
@@ -161,6 +191,10 @@ class AgnosticConfiguration():
                             get_upstream_name( d ),
                         'dst_upstream':
                             get_upstream_url( d ),
+                        'proxy_redirect_to_replace_with_port':
+                            get_proxy_redirect_to_replace_url_with_port( d ),
+                        'proxy_redirect_to_replace_without_port':
+                            get_proxy_redirect_to_replace_url_without_port( d ),
                     }, 
             d_configurations,
             filepath,
