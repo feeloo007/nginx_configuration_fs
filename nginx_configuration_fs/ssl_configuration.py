@@ -28,6 +28,8 @@ from 	OpenSSL.crypto 		import 	load_certificate, load_privatekey, dump_privateke
 
 import 	hashlib
 
+import	json
+
 import	shared_infrastructure
 
 class SSLConfiguration():
@@ -391,28 +393,10 @@ class SSLConfiguration():
 
         return \
             hashlib.sha1(
-                ' '.join(
-                    reduce(
-                        list.__add__,
-                        map( 
-                            lambda ( server, portsv ): 		\
-                                reduce(
-                                    list.__add__,
-                                    map(
-                                        lambda ( port, filesv ): 	\
-                                             reduce(
-                                                 list.__add__,
-                                                 map(
-                                                     lambda ( file, infosv ): [ server, port, file, infosv ],
-                                                     sorted( filesv.items() )
-                                                 ) if filesv.items() else [ [] ] 
-                                             ),
-                                        sorted( portsv.items() )
-                                    ) if portsv.items() else [ [] ]
-                                ),
-                            sorted( d_configurations.items() )
-                        ) if d_configurations.items() else [ [] ]
-                    )
+                json.dumps(
+                    d_configurations,
+                    sort_keys   = True,
+                    cls         = shared_infrastructure.DictWithMaskableKeysEncoder,
                 )
             ).hexdigest()
 
