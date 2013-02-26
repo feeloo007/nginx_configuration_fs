@@ -407,8 +407,8 @@ class URL2AppConfiguration():
                            portsv.items()
                     )
                 ), 
-                self._d_configurations.items()
-            ) if self._d_configurations.items() else [ [] ]
+                self.d_configurations.items()
+            ) if self.d_configurations.items() else [ [] ]
         )
     id_configurations 	= property( get_id_configurations, None, None )
 
@@ -510,7 +510,7 @@ class URL2AppConfiguration():
 
         return	\
             self._get_version_configurations(
-                self._d_configurations
+                self.d_configurations
             )
 
     current_version_configurations	=	\

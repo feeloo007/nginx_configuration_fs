@@ -424,7 +424,7 @@ class SSLConfiguration():
 
         return \
             self._get_version_configurations(
-                self._d_configurations
+                self.d_configurations
             )
 
     current_version_configurations	= 	\
