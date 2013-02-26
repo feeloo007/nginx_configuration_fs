@@ -373,7 +373,7 @@ class SSLConfiguration():
         if  													\
                  reload_without_version_control 								\
              or													\
-                 self.get_version_configurations( d_configurations ) <> self.get_version_configurations() 	\
+                 self.get_version_configurations( d_configurations ) <> self.current_version_configurations	\
              or													\
                  hashlib.sha1( repr( l_bad_configurations ) ).hexdigest() <> hashlib.sha1( repr( self._l_bad_configurations ) ).hexdigest():
 
@@ -387,10 +387,7 @@ class SSLConfiguration():
         return False
 
     @synchronized( _configurations_lock )
-    def get_version_configurations( self, d_configurations = None ):
-
-        if d_configurations == None:
-            d_configurations = self._d_configurations 
+    def _get_version_configurations( self, d_configurations ):
 
         return \
             hashlib.sha1(
@@ -418,3 +415,21 @@ class SSLConfiguration():
                     )
                 )
             ).hexdigest()
+
+    get_version_configurations	= _get_version_configurations
+
+
+    @synchronized( _configurations_lock )
+    def get_current_version_configurations( self ):
+
+        return \
+            self._get_version_configurations(
+                self._d_configurations
+            )
+
+    current_version_configurations	= 	\
+        property(
+            get_current_version_configurations,
+            None,
+            None
+        )
