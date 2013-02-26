@@ -28,6 +28,8 @@ import  subprocess
 
 import 	hashlib
 
+import	json
+
 import	shared_infrastructure
 
 class URL2AppConfiguration():
@@ -376,7 +378,7 @@ class URL2AppConfiguration():
         if  													\
                  reload_without_version_control 								\
              or													\
-                 self.get_version_configurations( d_configurations ) <> self.get_version_configurations() 	\
+                 self.get_version_configurations( d_configurations ) <> self.current_version_configurations	\
              or													\
                  hashlib.sha1( repr( l_bad_configurations ) ).hexdigest() <> hashlib.sha1( repr( self._l_bad_configurations ) ).hexdigest():
 
@@ -407,8 +409,8 @@ class URL2AppConfiguration():
                            portsv.items()
                     )
                 ), 
-                self._d_configurations.items()
-            ) if self._d_configurations.items() else [ [] ]
+                self.d_configurations.items()
+            ) if self.d_configurations.items() else [ [] ]
         )
     id_configurations 	= property( get_id_configurations, None, None )
 
@@ -447,60 +449,32 @@ class URL2AppConfiguration():
     
 
     @synchronized( _configurations_lock )
-    def get_version_configurations( self, d_configurations = {} ):
+    def _get_version_configurations( self, d_configurations ):
 
-        if d_configurations == None:
-            d_configurations = self._d_configurations
-
-        
         return \
             hashlib.sha1(
-                ' '.join(
-                    reduce(
-                        list.__add__,
-                        map( 
-                            lambda ( server, portsv ): \
-                                reduce( 
-                                    list.__add__, 
-                                    map( 
-                                       lambda ( port, mappings_typev ): \
-                                           reduce( 
-                                                list.__add__, 
-                                                map(
-                                                    lambda ( mapping_type, infosv ): \
-                                                        reduce(
-                                                            list.__add__,
-                                                            map(
-                                                                lambda all_infos: \
-                                                                     [ server, port, mapping_type ] + all_infos,
-                                                                map(
-                                                                    lambda ( mappings ): \
-            							        reduce(
-                                                                            list.__add__,
-                                                                            #[ 
-                                                                            #    [ k, v ] 
-                                                                            #    for k, v 
-                                                                            #    in sorted( 
-                                                                            #        infosv[ 'times' ].items()
-                                                                            #    ) 
-                                                                            #] +
-                                                                            map(
-                                                                                lambda ( k, v ): [ k, v ],
-                                                                                sorted( mappings.items() )
-                                                                            ) if mappings.items() else [ [] ]
-                                                                        ),
-                                                                    infosv[ 'mappings' ]
-                                                                )
-                                                            )
-                                                        ),
-                                                    sorted( mappings_typev.items() )
-                                                ) if mappings_typev.items() else [ [] ]
-                                           ),
-                                           sorted( portsv.items() )
-                                    ) if portsv.items() else [ [] ]
-                                ), 
-                            sorted( d_configurations.items() )
-                        ) if d_configurations.items() else [ [] ]
-                    )
+                json.dumps(
+                    d_configurations,
+                    sort_keys   = True,
+                    cls         = shared_infrastructure.DictWithMaskableKeysEncoder,
                 )
             ).hexdigest()
+
+
+    get_version_configurations	= _get_version_configurations
+
+
+    @synchronized( _configurations_lock )
+    def get_current_version_configurations( self ):
+
+        return	\
+            self._get_version_configurations(
+                self.d_configurations
+            )
+
+    current_version_configurations	=	\
+        property(
+            get_current_version_configurations,
+            None,
+            None
+        )
