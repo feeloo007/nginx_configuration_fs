@@ -11,6 +11,10 @@ import  regex
 
 import  rfc3987
 
+import	collections
+
+import	json
+
 def cache_key( fun, instance, *args ):
 
 #    print( 
@@ -133,3 +137,54 @@ def listen_ssl_process_uri(
             )
         )
         raise Exception
+
+
+
+class DictWithMaskableKeys( collections.MutableMapping ):
+
+    def __init__( self, data, l_masked_keys ):
+        self._data             	= data
+        self._l_masked_keys 	= l_masked_keys
+
+    def __len__( self ):
+        return len( self._data )
+
+    def __iter__( self ):
+        return iter( self._data )
+
+    def __setitem__( self, k, v ):
+        if k not in self._data:
+            raise KeyError( k )
+
+        self._data[k] = v
+
+    def __delitem__( self, k ):
+        if k not in self._data:
+            raise KeyError( k )
+
+        self._data.delitem__( k )
+
+    def __getitem__( self, k ):
+        return self._data[ k ]
+
+    def __contains__( self, k ):
+        return k in self._data
+
+    def itervisibleitems( self ):
+
+        return \
+            dict(
+               [
+                  ( key, value )
+                  for key, value in self._data.iteritems()
+                  if key not in self._l_masked_keys
+               ]
+            )
+
+
+class DictWithMaskableKeysEncoder( json.JSONEncoder ):
+
+    def default( self, obj ):
+        if isinstance( obj, DictWithMaskableKeys ):
+          return obj.itervisibleitems()
+        return json.JSONEncoder.default( self, obj )
