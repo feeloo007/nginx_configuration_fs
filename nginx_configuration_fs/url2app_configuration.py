@@ -28,6 +28,8 @@ import  subprocess
 
 import 	hashlib
 
+import	json
+
 import	shared_infrastructure
 
 class URL2AppConfiguration():
@@ -451,53 +453,10 @@ class URL2AppConfiguration():
 
         return \
             hashlib.sha1(
-                ' '.join(
-                    reduce(
-                        list.__add__,
-                        map( 
-                            lambda ( server, portsv ): \
-                                reduce( 
-                                    list.__add__, 
-                                    map( 
-                                       lambda ( port, mappings_typev ): \
-                                           reduce( 
-                                                list.__add__, 
-                                                map(
-                                                    lambda ( mapping_type, infosv ): \
-                                                        reduce(
-                                                            list.__add__,
-                                                            map(
-                                                                lambda all_infos: \
-                                                                     [ server, port, mapping_type ] + all_infos,
-                                                                map(
-                                                                    lambda ( mappings ): \
-            							        reduce(
-                                                                            list.__add__,
-                                                                            #[ 
-                                                                            #    [ k, v ] 
-                                                                            #    for k, v 
-                                                                            #    in sorted( 
-                                                                            #        infosv[ 'times' ].items()
-                                                                            #    ) 
-                                                                            #] +
-                                                                            map(
-                                                                                lambda ( k, v ): [ k, v ],
-                                                                                sorted( mappings.items() )
-                                                                            ) if mappings.items() else [ [] ]
-                                                                        ),
-                                                                    infosv[ 'mappings' ]
-                                                                )
-                                                            )
-                                                        ),
-                                                    sorted( mappings_typev.items() )
-                                                ) if mappings_typev.items() else [ [] ]
-                                           ),
-                                           sorted( portsv.items() )
-                                    ) if portsv.items() else [ [] ]
-                                ), 
-                            sorted( d_configurations.items() )
-                        ) if d_configurations.items() else [ [] ]
-                    )
+                json.dumps(
+                    d_configurations,
+                    sort_keys   = True,
+                    cls         = shared_infrastructure.DictWithMaskableKeysEncoder,
                 )
             ).hexdigest()
 
