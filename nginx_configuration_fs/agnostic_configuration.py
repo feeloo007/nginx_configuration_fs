@@ -143,10 +143,6 @@ class AgnosticConfiguration():
                 uri += d[ 'dst_userinfo' ] + '@'
             uri += get_upstream_name( d )
             uri += d[ 'dst_path' ] or ''
-            if  d.get( 'dst_query' ):
-                uri += '?' + d[ 'dst_query' ]
-            if  d.get( 'dst_fragment' ):
-                uri += '#' + d[ 'dst_fragment' ]
             return uri
 
 
@@ -159,10 +155,6 @@ class AgnosticConfiguration():
             uri 	+= d[ 'src_host' ]
             uri 	+= ':%s' % ( d[ 'dst_port' ] )
             uri 	+= d[ 'dst_path' ] or ''
-            if  d.get( 'dst_query' ):
-                uri 	+= '?' + d[ 'dst_query' ]
-            if  d.get( 'dst_fragment' ):
-                uri 	+= '#' + d[ 'dst_fragment' ]
             return uri
 
         def get_proxy_redirect_to_replace_url_without_port( d ):
@@ -173,10 +165,6 @@ class AgnosticConfiguration():
                 uri 	+= d[ 'dst_userinfo' ] + '@'
             uri 	+= d[ 'src_host' ]
             uri 	+= d[ 'dst_path' ] or ''
-            if  d.get( 'dst_query' ):
-                uri 	+= '?' + d[ 'dst_query' ]
-            if  d.get( 'dst_fragment' ):
-                uri 	+= '#' + d[ 'dst_fragment' ]
             return uri
 
         AgnosticConfiguration.add_to_configuration( 
