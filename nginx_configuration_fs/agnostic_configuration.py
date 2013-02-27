@@ -143,10 +143,6 @@ class AgnosticConfiguration():
                 uri += d[ 'dst_userinfo' ] + '@'
             uri += get_upstream_name( d )
             uri += d[ 'dst_path' ] or ''
-            if  d.get( 'dst_query' ):
-                uri += '?' + d[ 'dst_query' ]
-            if  d.get( 'dst_fragment' ):
-                uri += '#' + d[ 'dst_fragment' ]
             return uri
 
 
@@ -159,10 +155,6 @@ class AgnosticConfiguration():
             uri 	+= d[ 'src_host' ]
             uri 	+= ':%s' % ( d[ 'dst_port' ] )
             uri 	+= d[ 'dst_path' ] or ''
-            if  d.get( 'dst_query' ):
-                uri 	+= '?' + d[ 'dst_query' ]
-            if  d.get( 'dst_fragment' ):
-                uri 	+= '#' + d[ 'dst_fragment' ]
             return uri
 
         def get_proxy_redirect_to_replace_url_without_port( d ):
@@ -173,10 +165,6 @@ class AgnosticConfiguration():
                 uri 	+= d[ 'dst_userinfo' ] + '@'
             uri 	+= d[ 'src_host' ]
             uri 	+= d[ 'dst_path' ] or ''
-            if  d.get( 'dst_query' ):
-                uri 	+= '?' + d[ 'dst_query' ]
-            if  d.get( 'dst_fragment' ):
-                uri 	+= '#' + d[ 'dst_fragment' ]
             return uri
 
         AgnosticConfiguration.add_to_configuration( 
@@ -184,14 +172,32 @@ class AgnosticConfiguration():
             lambda d: {
                         'src':
                             d[ 'src_URI' ],
+                        'src_scheme':
+                            d[ 'src_scheme' ],
+                        'src_userinfo':
+                            d[ 'src_userinfo' ] or '',
+                        'src_host':
+                            d[ 'src_host' ],
+                        'src_port':
+                            str( d[ 'src_port' ] ),
+                        'src_path':
+                            d[ 'src_path' ] or '',
+                        'src_query':
+                            d[ 'src_query' ] or '',
                         'dst':
                             d[ 'dst_URI' ],
                         'dst_scheme':
                             d[ 'dst_scheme' ],
+                        'dst_userinfo':
+                            d[ 'dst_userinfo' ] or '',
                         'dst_host':
                             d[ 'dst_host' ],
                         'dst_port':
                             str( d[ 'dst_port' ] ),
+                        'dst_path':
+                            d[ 'dst_path' ] or '',
+                        'dst_query':
+                            d[ 'dst_query' ] or '',
                         'dst_upstream_name':
                             get_upstream_name( d ),
                         'dst_upstream':
