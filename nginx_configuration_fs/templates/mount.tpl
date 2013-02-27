@@ -12,7 +12,6 @@ map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_with_port_{{ suf
     default 	"";
 
     {% for mount in mount_configurations -%}
-    # {{ mount }}
     ~^{{ mount.src }} {{ mount.proxy_redirect_to_replace_with_port }};
     {% endfor -%}
 
@@ -23,7 +22,6 @@ map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_without_port_{{ 
     default 	"";
 
     {% for mount in mount_configurations -%}
-    # {{ mount }}
     ~^{{ mount.src }} {{ mount.proxy_redirect_to_replace_without_port }};
     {% endfor -%}
 
