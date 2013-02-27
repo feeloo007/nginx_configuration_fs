@@ -57,3 +57,67 @@ map $scheme://$host:$server_port$uri $suffix_uri_{{ suffix_map }} {
     {% endfor -%}
 
 }
+
+map $scheme://$host:$server_port$uri $proxy_cookie_domain_to_replace_{{ suffix_map }} {
+
+    default     "";
+
+    {% for mount in mount_configurations -%}
+    ~^{{ mount.src }} {{ mount.src_host }}:{{ mount.dst_port }};
+    {% endfor -%}
+
+}
+
+map $scheme://$host:$server_port$uri $proxy_cookie_domain_replaced_by_{{ suffix_map }} {
+
+    default     "";
+
+    {% for mount in mount_configurations -%}
+    ~^{{ mount.src }} {{ mount.src_host }}:{{ mount.src_port }};
+    {% endfor -%}
+
+}
+
+map $scheme://$host:$server_port$uri $proxy_cookie_path_to_replace_{{ suffix_map }} {
+
+    default     "";
+
+    {% for mount in mount_configurations -%}
+    ~^{{ mount.src }} ~^{{ mount.dst_path }}$;
+    {% endfor -%}
+
+}
+
+map $scheme://$host:$server_port$uri $proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }} {
+
+    default     "#NOT_REPLACABLE#";
+
+    {% for mount in mount_configurations -%}
+    {% if mount.dst_path.endswith( '/' ) and mount.dst_path.rstrip( '/' )|length > 0 -%}
+    ~^{{ mount.src }} {{ mount.dst_path.rstrip( '/' ) }};
+    {% endif -%}
+    {% endfor -%}
+
+}
+
+map $scheme://$host:$server_port$uri $proxy_cookie_path_replaced_by_{{ suffix_map }} {
+
+    default     "";
+
+    {% for mount in mount_configurations -%}
+    ~^{{ mount.src }} {{ mount.src_path }};
+    {% endfor -%}
+
+}
+
+map $scheme://$host:$server_port$uri $proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }} {
+
+    default     "#NO_REPLACEMENT#";
+
+    {% for mount in mount_configurations -%}
+    {% if mount.src_path.endswith( '/' ) and mount.src_path.rstrip( '/' )|length > 0 -%}
+    ~^{{ mount.src }} {{ mount.src_path.rstrip( '/' ) }};
+    {% endif -%}
+    {% endfor -%}
+
+}
