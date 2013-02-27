@@ -7,6 +7,18 @@ map $scheme://$host:$server_port$uri $upstream_and_prefix_uri_{{ suffix_map }} {
 
 }
 
+map $scheme://$host:$server_port$uri $added_query_string_{{ suffix_map }} {
+
+    default 	"";
+
+    {% for mount in mount_configurations -%}
+    {% if mount.dst_query -%}
+    ~^{{ mount.src }} {{ mount.dst_query }};
+    {% endif -%}
+    {% endfor %}
+
+}
+
 map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_with_port_{{ suffix_map }} {
 
     default 	"";
