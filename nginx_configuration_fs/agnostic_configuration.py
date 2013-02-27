@@ -184,14 +184,32 @@ class AgnosticConfiguration():
             lambda d: {
                         'src':
                             d[ 'src_URI' ],
+                        'src_scheme':
+                            d[ 'src_scheme' ],
+                        'src_userinfo':
+                            d[ 'src_userinfo' ] or '',
+                        'src_host':
+                            d[ 'src_host' ],
+                        'src_port':
+                            str( d[ 'src_port' ] ),
+                        'src_path':
+                            d[ 'src_path' ] or '',
+                        'src_query':
+                            d[ 'src_query' ] or '',
                         'dst':
                             d[ 'dst_URI' ],
                         'dst_scheme':
                             d[ 'dst_scheme' ],
+                        'dst_userinfo':
+                            d[ 'dst_userinfo' ] or '',
                         'dst_host':
                             d[ 'dst_host' ],
                         'dst_port':
                             str( d[ 'dst_port' ] ),
+                        'dst_path':
+                            d[ 'dst_path' ] or '',
+                        'dst_query':
+                            d[ 'dst_query' ] or '',
                         'dst_upstream_name':
                             get_upstream_name( d ),
                         'dst_upstream':
