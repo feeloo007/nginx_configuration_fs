@@ -155,6 +155,11 @@ server {
         proxy_redirect 		$proxy_redirect_to_replace_with_port_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
         proxy_redirect 		$proxy_redirect_to_replace_without_port_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
 
+        proxy_cookie_domain     $proxy_cookie_domain_to_replace_{{ suffix_map }} $proxy_cookie_domain_replaced_by_{{ suffix_map }};
+
+        proxy_cookie_path       $proxy_cookie_path_to_replace_{{ suffix_map }} $proxy_cookie_path_replaced_by_{{ suffix_map }};
+        proxy_cookie_path       $proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }} $proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }};
+
         if ( $added_query_string_{{ suffix_map }} ) {
             proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
         }
