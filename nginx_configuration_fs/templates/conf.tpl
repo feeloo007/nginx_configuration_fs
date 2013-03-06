@@ -36,9 +36,9 @@ server {
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
 
-    error_page                  404     =404       /no_configuration.txt;
-    error_page                  502     =503       /backend_failed.txt;
-    error_page                  504     =503       /backend_failed.txt;
+    error_page                  404     =404       /__NO_CONFIGURATION__.html;
+    error_page                  502     =503       /__BACKEND_FAILED__.html;
+    error_page                  504     =503       /__BACKEND_FAILED__.html;
 
     root /usr/share/nginx/html/;
 
@@ -46,11 +46,11 @@ server {
 
         root /usr/share/nginx/html/;
 
-        location = /backend_failed.txt {
+        location = /__BACKEND_FAILED__.html {
             internal;
         }
 
-        location = /no_configuration.txt {
+        location = /__NO_CONFIGURATION__.html {
             internal;
         }
 

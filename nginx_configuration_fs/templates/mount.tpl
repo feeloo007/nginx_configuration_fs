@@ -1,6 +1,6 @@
 map $scheme://$host:$server_port$uri $upstream_and_prefix_uri_{{ suffix_map }} {
 
-    default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/no_configuration.txt;
+    default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/__NO_CONFIGURATION__.html;
     {% for mount in mount_configurations -%}
     ~^{{ mount.src }} {{ mount.dst_upstream }};
     {% endfor -%}
