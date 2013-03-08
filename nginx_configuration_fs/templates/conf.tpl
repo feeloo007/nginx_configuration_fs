@@ -41,6 +41,7 @@ server {
     error_page                  404     =404       /__NO_CONFIGURATION__.html;
     error_page                  502     =503       /__BACKEND_FAILED__.html;
     error_page                  504     =503       /__BACKEND_FAILED__.html;
+    error_page                  418     =503       /__NO_RESOLUTION_FOR_BACKEND__.html;
 
     root /usr/share/nginx/html/;
 
