@@ -136,11 +136,21 @@ class AgnosticConfiguration():
         )
 
         def get_ips_for_upstream( host ):
+
+            l_ips = []
             try:
-                return [ ip.address for ip in self._resolver.query( host, 'A' ) ]
+                l_ips.extend( [ ip.address for ip in self._resolver.query( host, 'A' ) ] )
             except:
-                l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_agnostic_configuration, server, port, self._mount_filename ) )
-                return []
+                pass
+            try:
+                l_ips.extend( [ '[%s]' % ( ip.address ) for ip in self._resolver.query( host, 'AAAA' ) ] )
+            except:
+                pass
+
+            if not l_ips:
+               l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_agnostic_configuration, server, port, self._mount_filename ) )
+
+            return l_ips
 
         def get_upstream_name( d ):
             return '%s__%s_%s__%s' % (
