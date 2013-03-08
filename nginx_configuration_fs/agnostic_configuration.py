@@ -47,29 +47,36 @@ class AgnosticConfiguration():
         current_server, 
         current_port, 
         current_mapping_type,
+        le_sort = lambda x: x,
     ):
-        d_configurations.setdefault( 
-            current_server, 
-            {} 
-        ).setdefault( 
-            current_port, 
-            {} 
-        ).setdefault( 
-            current_mapping_type, 
-            shared_infrastructure.DictWithMaskableKeys(
-                {
-                    'times': {
-                        'ctime': '%s' % ( os.path.getctime( filepath ) ),
-                        'mtime': '%s' % ( os.path.getmtime( filepath ) ),
-                    },
-                    'mappings': []
-                },
-                [ 'times' ]
+        d_configurations[ current_server ][ current_port ][ current_mapping_type ][ 'mappings' ] = \
+            (
+                lambda l, e, le_sort = le_sort:
+                    [ x for x in l if le_sort( x ) >  le_sort( e ) ] 	+
+                    [ e ] 						+
+                    [ x for x in l if le_sort( x ) <= le_sort( e ) ]
+            )(
+                d_configurations.setdefault(
+                    current_server,
+                    {}
+                ).setdefault(
+                    current_port,
+                    {}
+                ).setdefault(
+                    current_mapping_type,
+                    shared_infrastructure.DictWithMaskableKeys(
+                        {
+                            'times': {
+                                'ctime': '%s' % ( os.path.getctime( filepath ) ),
+                                'mtime': '%s' % ( os.path.getmtime( filepath ) ),
+                            },
+                            'mappings': []
+                        },
+                        [ 'times' ]
+                    )
+                )[ 'mappings' ],
+                l_mapping( d )
             )
-        )[ 'mappings' ].append( 
-            l_mapping( d )
-        )
-
 
     _mount_pattern			= 	\
         '''^\s*%s\s+%s''' % (
@@ -212,6 +219,7 @@ class AgnosticConfiguration():
             server, 
             port, 
             mapping_type, 
+            le_sort	= lambda x: x[ 'src' ]
         )
 
 
@@ -264,9 +272,10 @@ class AgnosticConfiguration():
             },
             d_configurations,
             filepath,
-            server, 
-            port, 
-            mapping_type, 
+            server,
+            port,
+            mapping_type,
+            le_sort     = lambda x: ( x[ 'src' ], x[ 'dst' ] )
         )
 
 
@@ -334,9 +343,10 @@ class AgnosticConfiguration():
                     }, 
             d_configurations,
             filepath,
-            server, 
-            port, 
-            mapping_type, 
+            server,
+            port,
+            mapping_type,
+            le_sort     = lambda x: ( x[ 'src' ], x[ 'dst' ] )
         )
 
 
