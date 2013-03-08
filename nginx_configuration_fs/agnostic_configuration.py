@@ -41,7 +41,7 @@ class AgnosticConfiguration():
     @staticmethod
     def add_to_configuration( 
         d, 
-        l_mapping,
+        le_mapping,
         d_configurations,
         filepath,
         current_server, 
@@ -75,7 +75,7 @@ class AgnosticConfiguration():
                         [ 'times' ]
                     )
                 )[ 'mappings' ],
-                l_mapping( d )
+                le_mapping( d )
             )
 
     _mount_pattern			= 	\

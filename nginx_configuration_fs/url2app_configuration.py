@@ -41,7 +41,7 @@ class URL2AppConfiguration():
     @staticmethod
     def add_to_configuration( 
         d, 
-        l_mapping,
+        le_mapping,
         d_configurations,
         current_server, 
         current_port, 
