@@ -603,14 +603,6 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         l_uniq_upstream	= set()
 
-        def get_ip_for_upstream( host ):
-            try:
-                return self._resolver.query( host, 'A' )[ 0 ].address
-            except:
-                #l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_agnostic_configuration, server, ) )
-                return None
-
-
         return \
             self._env.get_template( 
                 self.get_template_name( 'conf' ) 
@@ -656,7 +648,6 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         and
                         (
                             l_uniq_upstream.add( d[ 'name' ] ) or
-                            d.update( { 'ip': get_ip_for_upstream( d[ 'host' ] ) } ) or
                             True
                         ),
                         [
@@ -667,6 +658,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                     d[ 'dst_host' ],
                                 'port':
                                     d[ 'dst_port' ],
+                                'ip':
+                                    d[ 'dst_upstream_resolved_ip' ],
                             }
                             for d in
                             self._agnostic_configuration.d_configurations[

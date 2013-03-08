@@ -100,6 +100,7 @@ class AgnosticConfiguration():
         d_configurations,
         l_bad_configurations,
     ):
+
         shared_infrastructure.common_process_uri( 
             lambda: self._root_agnostic_configuration,  
             d, 
@@ -133,6 +134,13 @@ class AgnosticConfiguration():
             l_bad_configurations, 
             'src_'
         )
+
+        def get_ip_for_upstream( host ):
+            try:
+                return self._resolver.query( host, 'A' )[ 0 ].address
+            except:
+                l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_agnostic_configuration, server, port, self._mount_filename ) )
+                return None
 
         def get_upstream_name( d ):
             return '%s__%s_%s__%s' % (
@@ -209,6 +217,8 @@ class AgnosticConfiguration():
                             get_upstream_name( d ),
                         'dst_upstream':
                             get_upstream_url( d ),
+                        'dst_upstream_resolved_ip':
+                            get_ip_for_upstream( d[ 'dst_host' ] ),
                         'proxy_redirect_to_replace_with_port':
                             get_proxy_redirect_to_replace_url_with_port( d ),
                         'proxy_redirect_to_replace_without_port':
