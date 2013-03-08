@@ -3,14 +3,16 @@ log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_lo
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
 
 {% for upstream in upstream_configuration -%}
-{% if not upstream.ip -%}
+{% if not upstream.ips -%}
 # IMPOSSIBLE DE RESOUDRE {{ upstream.host }} POUR {{ upstream.name }}
 # TODO - IMPLEMENTER UN SERVEUR TECHNIQUE INDIQUANT QUE LE DNS N'EST PAS RESOLVABLE
 
 {% else %}
 upstream {{ upstream.name }} {
     # resolution de {{ upstream.name }} valide au rafraichissement de FS
-    server {{ upstream.ip }}:{{ upstream. port }};
+    {% for ip in upstream.ips -%}
+    server {{ ip }}:{{ upstream. port }};
+    {% endfor -%}
     keepalive 16;
 }
 

@@ -658,8 +658,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                     d[ 'dst_host' ],
                                 'port':
                                     d[ 'dst_port' ],
-                                'ip':
-                                    d[ 'dst_upstream_resolved_ip' ],
+                                'ips':
+                                    d[ 'dst_upstream_resolved_ips' ],
                             }
                             for d in
                             self._agnostic_configuration.d_configurations[
