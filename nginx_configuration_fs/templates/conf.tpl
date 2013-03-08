@@ -56,6 +56,10 @@ server {
             internal;
         }
 
+        location = /__NO_RESOLUTION_FOR_BACKEND__.html {
+            internal;
+        }
+
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
         if ( $not_mapped_{{ suffix_map }} ) {
              return 		404;
