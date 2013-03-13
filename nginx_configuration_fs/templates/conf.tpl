@@ -94,6 +94,21 @@ server {
         location = /__NO_RESOLUTION_FOR_BACKEND__.html {
             internal;
             ssi on;
+
+            {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+            try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri
+                        =404;
+            {% endif -%}
+
         }
 
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
