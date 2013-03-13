@@ -4,7 +4,7 @@ map $scheme://$host:$server_port$uri $not_resolved_backend_{{ suffix_map }} {
 
     {% for mount in mount_configurations -%}
     {% if not mount.dst_upstream_resolved_ips -%}
-    ~^{{ mount.src }} 	yes;
+    ~^{{ mount.src }} 	{{mount.dst_host}};
     {%endif -%}
     {% endfor -%}
 

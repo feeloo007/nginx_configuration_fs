@@ -59,6 +59,7 @@ server {
 
         location = /__NO_RESOLUTION_FOR_BACKEND__.html {
             internal;
+            ssi on;
         }
 
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
@@ -116,6 +117,10 @@ server {
         proxy_cookie_path       $proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }} $proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }};
 
         if ( $not_resolved_backend_{{ suffix_map }} ) {
+            set $not_resolved_backend_name not_resolved_backend_{{ suffix_map }};
+            set $not_resolved_backend $not_resolved_backend_{{ suffix_map }};
+            set $not_resolved_backend_original_url $scheme://$host:$server_port$request_uri;
+            set $not_resolved_backend_resolved_url $scheme://$host:$server_port$uri;
             return 		418;
         }
         if ( $added_query_string_{{ suffix_map }} ) {
