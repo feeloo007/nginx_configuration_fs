@@ -11,7 +11,7 @@ log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_lo
 upstream {{ upstream.name }} {
     # resolution de {{ upstream.name }} valide au rafraichissement de FS
     {% for ip in upstream.ips -%}
-    server {{ ip }}:{{ upstream. port }};
+    server {{ ip }}:{{ upstream.port }};
     {% endfor -%}
     keepalive 16;
 }
