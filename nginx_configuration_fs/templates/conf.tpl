@@ -3,14 +3,16 @@ log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_lo
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
 
 {% for upstream in upstream_configuration -%}
-{% if not upstream.ip -%}
+{% if not upstream.ips -%}
 # IMPOSSIBLE DE RESOUDRE {{ upstream.host }} POUR {{ upstream.name }}
 # TODO - IMPLEMENTER UN SERVEUR TECHNIQUE INDIQUANT QUE LE DNS N'EST PAS RESOLVABLE
 
 {% else %}
 upstream {{ upstream.name }} {
     # resolution de {{ upstream.name }} valide au rafraichissement de FS
-    server {{ upstream.ip }}:{{ upstream. port }};
+    {% for ip in upstream.ips -%}
+    server {{ ip }}:{{ upstream.port }};
+    {% endfor -%}
     keepalive 16;
 }
 
@@ -43,6 +45,7 @@ server {
     error_page                  404     =404       /__NO_CONFIGURATION__.html;
     error_page                  502     =503       /__BACKEND_FAILED__.html;
     error_page                  504     =503       /__BACKEND_FAILED__.html;
+    error_page                  418     =503       /__NO_RESOLUTION_FOR_BACKEND__.html;
 
     root /usr/share/nginx/html/;
 
@@ -75,6 +78,26 @@ server {
 
         location = /__NO_CONFIGURATION__.html {
             internal;
+
+            {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+            try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
+                        /{{server}}/__default__/$www_static_url_2_entity_provisoire/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri
+                        =404;
+            {% endif -%}
+
+        }
+
+        location = /__NO_RESOLUTION_FOR_BACKEND__.html {
+            internal;
+            ssi on;
 
             {% if server == 'Z00-PR-D1-NGX01' and ( port == '80' or port == '1388' or port == '1389' ) %}
             try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
@@ -160,6 +183,13 @@ server {
         proxy_cookie_path       $proxy_cookie_path_to_replace_{{ suffix_map }} $proxy_cookie_path_replaced_by_{{ suffix_map }};
         proxy_cookie_path       $proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }} $proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }};
 
+        if ( $not_resolved_backend_{{ suffix_map }} ) {
+            set $not_resolved_backend_name not_resolved_backend_{{ suffix_map }};
+            set $not_resolved_backend $not_resolved_backend_{{ suffix_map }};
+            set $not_resolved_backend_original_url $scheme://$host:$server_port$request_uri;
+            set $not_resolved_backend_resolved_url $scheme://$host:$server_port$uri;
+            return 		418;
+        }
         if ( $added_query_string_{{ suffix_map }} ) {
             proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
         }

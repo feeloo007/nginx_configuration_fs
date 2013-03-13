@@ -1,3 +1,15 @@
+map $scheme://$host:$server_port$uri $not_resolved_backend_{{ suffix_map }} {
+
+    default	"";
+
+    {% for mount in mount_configurations -%}
+    {% if not mount.dst_upstream_resolved_ips -%}
+    ~^{{ mount.src }} 	{{mount.dst_host}};
+    {%endif -%}
+    {% endfor -%}
+
+}
+
 map $scheme://$host:$server_port$uri $upstream_and_prefix_uri_{{ suffix_map }} {
 
     default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/__NO_CONFIGURATION__.html;
