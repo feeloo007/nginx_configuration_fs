@@ -1,6 +1,5 @@
 {
     "root_agnostic_configuration"	: "/etc/mdp/web.d/", 
-    "root_nginx_configuration"		: "/etc/mdp/nginx.d/", 
     "user_owner"			: "nginx",
     "group_owner"			: "nginx",
     "resolver_conf"			: "/etc/mdp/resolv.d/NGINX",

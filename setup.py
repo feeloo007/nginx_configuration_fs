@@ -29,6 +29,7 @@ setup(name='nginx_configuration_fs',
           'pyOpenSSL==0.13',
           'regex==0.1.20121216',
           'rfc3987==1.3.1',
+          'plac==0.9.1',
       ],
       entry_points="""
       # -*- Entry points: -*-
