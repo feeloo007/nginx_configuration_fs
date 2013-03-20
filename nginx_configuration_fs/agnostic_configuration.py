@@ -239,7 +239,7 @@ class AgnosticConfiguration():
             server, 
             port, 
             mapping_type, 
-            le_sort	= lambda x: x[ 'src' ]
+            le_sort	= lambda x: ( x[ 'src' ], x[ 'dst' ] )
         )
 
 
@@ -295,7 +295,7 @@ class AgnosticConfiguration():
             server,
             port,
             mapping_type,
-            le_sort     = lambda x: ( x[ 'src' ], x[ 'dst' ] )
+            le_sort     = lambda x: ( x[ 'uri' ] )
         )
 
 
