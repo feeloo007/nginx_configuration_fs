@@ -66,7 +66,10 @@ __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__		= \
         (
             'fs_mntops formated option (see man fstab)',
             'option',
-            'o'
+            'o',
+            None,
+            None,
+            'fs_mntops'
         )
 )
 def main(
