@@ -188,3 +188,16 @@ class DictWithMaskableKeysEncoder( json.JSONEncoder ):
         if isinstance( obj, DictWithMaskableKeys ):
           return obj.itervisibleitems()
         return json.JSONEncoder.default( self, obj )
+
+
+def catch_NoNamesservers( f ):
+
+    import dns.resolver
+
+    def wrapped( *args, **kwargs ):
+        try:
+            return f( *args, **kwargs )
+        except dns.resolver.NoNameservers:
+            return []
+
+    return wrapped
