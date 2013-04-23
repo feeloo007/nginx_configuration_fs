@@ -257,6 +257,7 @@ class URL2AppConfiguration():
 
         # Obtention d'un resolveur base sur le resolv_conf fouri
         self._resolver		= dns.resolver.Resolver( self._resolver_conf )
+        self._resolver.query    = shared_infrastructure.catch_NoNamesservers( self._resolver.query )
 
         # Recherche des serveurs
         for server in [ 
@@ -268,9 +269,7 @@ class URL2AppConfiguration():
 
             # Si le nom ne correspond pas a un nom resolvable
             # la configuration n'est pas prise en compte
-	    try:
- 	               self._resolver.query( server, 'A' )
-            except:
+            if not self._resolver.query( server, 'A' ) and not self._resolver.query( server, 'AAAA' ):
                 l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_url2app_configuration, server, ) )
                 continue
 
