@@ -269,7 +269,7 @@ class URL2AppConfiguration():
 
             # Si le nom ne correspond pas a un nom resolvable
             # la configuration n'est pas prise en compte
-            if not self._resolver.query( server, 'A' ):
+            if not self._resolver.query( server, 'A' ) and not self._resolver.query( server, 'AAAA' ):
                 l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_url2app_configuration, server, ) )
                 continue
 
