@@ -59,6 +59,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._gid_owner			= gid_owner
         self._resolver_conf		= resolver_conf
         self._resolver			= dns.resolver.Resolver( self._resolver_conf )
+        self._resolver.query    	= shared_infrastructure.catch_NoNamesservers( self._resolver.query )
         self._mount_filename		= mount_filename
         self._unmount_filename		= unmount_filename
         self._redirect_filename		= redirect_filename
