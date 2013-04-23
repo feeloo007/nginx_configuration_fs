@@ -138,14 +138,8 @@ class AgnosticConfiguration():
         def get_ips_for_upstream( host ):
 
             l_ips = []
-            try:
-                l_ips.extend( [ ip.address for ip in self._resolver.query( host, 'A' ) ] )
-            except:
-                pass
-            try:
-                l_ips.extend( [ '[%s]' % ( ip.address ) for ip in self._resolver.query( host, 'AAAA' ) ] )
-            except:
-                pass
+            l_ips.extend( [ ip.address for ip in self._resolver.query( host, 'A' ) ] )
+            l_ips.extend( [ '[%s]' % ( ip.address ) for ip in self._resolver.query( host, 'AAAA' ) ] )
 
             if not l_ips:
                l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_agnostic_configuration, server, port, self._mount_filename ) )
@@ -533,6 +527,7 @@ class AgnosticConfiguration():
 
         # Obtention d'un resolveur base sur le resolv_conf fouri
         self._resolver		= dns.resolver.Resolver( self._resolver_conf )
+        self._resolver.query	= shared_infrastructure.catch_NoNamesservers( self._resolver.query )
 
         # Recherche des serveurs
         for server in [ 
@@ -544,12 +539,9 @@ class AgnosticConfiguration():
 
             # Si le nom ne correspond pas a un nom resolvable
             # la configuration n'est pas prise en compte
-	    try:
- 	               self._resolver.query( server, 'A' )
-            except:
+	    if not self._resolver.query( server, 'A' ) and not self._resolver.query( server, 'AAAA' ):
                 l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_agnostic_configuration, server, ) )
                 continue
-
 
             # Si le repertoire ne contient pas de configuration
             # de port, la configuration n'est pas prise en compte
