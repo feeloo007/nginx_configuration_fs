@@ -15,6 +15,12 @@ import	collections
 
 import	json
 
+import 	os
+
+import	sys
+
+import  twisted.scripts._twistd_unix
+
 def cache_key( fun, instance, *args ):
 
 #    print( 
@@ -188,3 +194,185 @@ class DictWithMaskableKeysEncoder( json.JSONEncoder ):
         if isinstance( obj, DictWithMaskableKeys ):
           return obj.itervisibleitems()
         return json.JSONEncoder.default( self, obj )
+
+
+class DaemonRunner( twisted.scripts._twistd_unix.UnixApplicationRunner ):
+
+    def __init__(
+        self,
+        le_preApplication,
+        l_le_startApplication,
+    ):
+
+        class FakeConfig(dict):
+            """Wrapper class to make a options object look like dictionary
+            for twistd stuff
+            """
+
+            def __init__(self, options):
+
+                self.options = options
+
+            def __getitem__(self, key):
+
+                return getattr(self.options, key)
+
+        class Options:
+
+            def get( self, key, default = None ):
+
+                return getattr( self, key, default )
+
+        options                         = Options()
+
+        options.profile                 = ''
+        options.chroot                  = None
+        options.rundir                  = '.'
+        options.umask                   = 022
+        options.pidfile                 = None
+        options.debug                   = False
+
+        self.options                    = options
+
+        twisted.scripts._twistd_unix.UnixApplicationRunner.__init__(
+            self,
+            self.options
+        )
+
+        self.config                     = FakeConfig( options )
+
+        self.application                = None
+
+        self._le_preApplication         = le_preApplication
+
+        self._l_le_startApplication     =                       \
+            l_le_startApplication
+
+
+    def preApplication( self ):
+
+        self._startApplicationParams    =                       \
+            self._le_preApplication()
+
+        self.options.nodaemon           =                       \
+            self._startApplicationParams.get(                   \
+                'nodaemon',
+                False
+            )
+
+        twisted.scripts._twistd_unix.UnixApplicationRunner.preApplication(
+            self
+        )
+
+    def run(self):
+
+        self.preApplication()
+
+        self.postApplication()
+
+    def startApplication(self, application ):
+
+        try:
+            self.setupEnvironment(
+                self.config[ 'chroot' ],
+                self.config[ 'rundir' ],
+                self.config[ 'nodaemon' ],
+                self.config[ 'umask' ],
+                self.config[ 'pidfile' ],
+            )
+        except Exception, e:
+            # We may have already forked/daemonized at this point, so lets hope
+            # that logging was setup properly otherwise, we may never know...
+            print >>sys.stderr, "Error setting up environment: %r" % e
+            sys.exit( -2 )
+
+        map(
+            lambda le: le( self._startApplicationParams ),
+            self._l_le_startApplication
+        )
+
+
+class TwistedDaemon( object ):
+
+    def __init__(
+        self,
+        bootstrap,
+         **kwargs
+    ):
+
+        self._bootstrap                 = bootstrap
+        self._kwargs                    = kwargs
+
+    def __getattribute__( self, attr ):
+
+        try:
+            return                                      \
+                object.__getattribute__(                \
+                    self,                               \
+                    '_kwargs'                           \
+                )[ attr ]
+        except:
+            try:
+                return object.__getattribute__(         \
+                    self,                               \
+                    attr                                \
+                )
+            except Exception, e:
+                raise AttributeError( '%r' %e )
+
+    def get_kwargs( self ):
+        return self._kwargs
+    kwargs                      = property( get_kwargs, None, None )
+
+    def get_bootstrap( self ):
+        return self._bootstrap
+    bootstrap                   = property( get_bootstrap, None, None )
+
+
+    def run(
+        self
+        ):
+
+        from twisted.internet import protocol
+        from twisted.internet import reactor
+
+        class PP(protocol.ProcessProtocol):
+            def __init__( self ):
+                pass
+            def connectionMade( self ):
+                sys.stderr.write( "connectionMade!" )
+                #self.transport.closeStdin() # tell them we're done
+
+            def outReceived( self, data ):
+                sys.stderr.write( 'out %s' % data )
+
+            def errReceived(self, data):
+                sys.stderr.write( 'err %s' % data )
+
+            def inConnectionLost(self):
+                sys.stderr.write( "inConnectionLost! stdin is closed! (we probably did it)" )
+
+            def outConnectionLost(self):
+                sys.stderr.write( "outConnectionLost! The child closed their stdout!" )
+
+            def errConnectionLost(self):
+                sys.stderr.write( "errConnectionLost! The child closed their stderr." )
+
+            def processExited(self, reason):
+                sys.stderr.write( "processExited, status %d" % (reason.value.exitCode,) )
+
+            def processEnded(self, reason):
+                sys.stderr.write( "processEnded, status %d" % (reason.value.exitCode,) )
+                sys.stderr.write( "quitting" )
+                reactor.stop()
+
+        reactor.spawnProcess(
+            PP(),
+            sys.executable,
+            (
+                sys.executable,
+                '-c',
+                self.bootstrap % ( self.kwargs ),
+            ),
+            usePTY              = 1,
+        )

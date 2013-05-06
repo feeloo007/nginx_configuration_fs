@@ -28,7 +28,6 @@ import	ssl_configuration
 
 import	url2app_configuration
 
-
 __NGINX_CONFIGURATION_FS_CONFIG_TEMPLATE__ 	= 'nginx_configuration_fs.config.template'
 __ROOT_AGNOSTIC_CONFIGURATION__			= 'root_agnostic_configuration'
 __ROOT_SSL_CONFIGURATION__			= 'root_ssl_configuration'
@@ -56,6 +55,7 @@ __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__		= \
         'encoding',
     )
 
+
 @plac.annotations(
     configuration_path	= 						\
         'path to formated file as %s' % 				\
@@ -70,13 +70,32 @@ __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__		= \
             None,
             None,
             'fs_mntops'
-        )
+        ),
+    nodaemon				= 				\
+        (
+            'no daemonize twisted FS. Default: False',
+            'flag',
+            'nodaemon',
+        ),
 )
-def main(
+def main_verify(
     configuration_path,
     mountpoint,
-    named_mount_options		= ''
+    named_mount_options		= '',
+    nodaemon			= False,
     ):
+    """
+    - Analyse la presence de tous les parametres necessaires
+    au programme.
+    - Verifie des regles fontionnelles (repertoire non montee...).
+    - Modifie les valeurs de fs_mntops passees et les rend coherentes.
+    - Le parametre nodaemon a True permet de ne pas detacher les
+    processus de la commande de depart. Ce parametre n'est pas
+    acessible lors d'un montage par /etc/fstab.
+    - renvoit sous forme de dictionnaire le parametres nodaemon
+    et tous les parametres necessaires a l'execution du / des
+    Daemon demarrer pat twisted.
+    """
 
     if not os.path.isfile( configuration_path ):
         print( '%s not found' % ( configuration_path ) )
@@ -159,6 +178,26 @@ def main(
         print( '%s not found in %s' % ( __URL2APP_FILENAME__, configuration_path )  )
         sys.exit(20)
 
+    return 							\
+        {							\
+            'uid_owner'			: uid_owner,		\
+            'gid_owner'			: gid_owner,		\
+            'd_config'			: d_config,		\
+            'configuration_path'	: configuration_path,   \
+            'mountpoint'		: mountpoint,		\
+            'named_mount_options'	: named_mount_options,	\
+            'nodaemon'			: nodaemon,		\
+        }
+
+def main_process(
+    uid_owner,
+    gid_owner,
+    d_config,
+    configuration_path,
+    mountpoint,
+    named_mount_options,
+    **kwargs
+):
 
     ssl_conf 	= ssl_configuration.SSLConfiguration(
         d_config[ __ROOT_SSL_CONFIGURATION__ ],
@@ -168,11 +207,10 @@ def main(
         d_config[ __RESTART_NGINX__ ],
     )
 
-
-    fuse = FUSE(
+    fuse 		= FUSE(
         nginx_configuration_fs.NGINXConfigurationFS(
             agnostic_configuration.AgnosticConfiguration(
-                d_config[ __ROOT_AGNOSTIC_CONFIGURATION__ ], 
+                d_config[ __ROOT_AGNOSTIC_CONFIGURATION__ ],
                 d_config[ __RESOLVER_CONF__ ],
                 d_config[ __MOUNT_FILENAME__ ],
                 d_config[ __UNMOUNT_FILENAME__ ],
@@ -191,7 +229,7 @@ def main(
             d_config[ __RESTART_NGINX__ ],
             ssl_conf,
             url2app_configuration.URL2AppConfiguration(
-                d_config[ __ROOT_URL2APP_CONFIGURATION__ ], 
+                d_config[ __ROOT_URL2APP_CONFIGURATION__ ],
                 d_config[ __RESOLVER_CONF__ ],
                 d_config[ __URL2APP_FILENAME__ ],
                 d_config[ __RESTART_NGINX__ ],
@@ -200,11 +238,11 @@ def main(
         ),
         mountpoint,
         foreground	= True,
-        ro		= True,
-        allow_other 	= True,
-        sync_read       = True,
-        sync            = True,
-        encoding        = 'utf-8',
+        ro	    	= True,
+        allow_other	= True,
+        sync_read 	= True,
+        sync		= True,
+        encoding    	= 'utf-8',
         **dict(
             ( k, v )
             for k, v in
@@ -224,5 +262,29 @@ def main(
         )
     )
 
+
 if __name__ == '__main__':
-    plac.call( main )
+
+    shared_infrastructure.DaemonRunner(
+        le_preApplication	= 				\
+            lambda: 						\
+                plac.call( 					\
+                    main_verify, 				\
+                    eager 	= False				\
+                    # eager = Falase sinon le tableau renovye
+                    # devient une liste
+                ),						\
+        l_le_startApplication	= 				\
+            [							\
+                lambda startApplicationParams: 			\
+                    shared_infrastructure.TwistedDaemon( 	\
+                        '''
+import  nginx_configuration_fs.main
+
+nginx_configuration_fs.main.main_process(
+   **%r
+)''',								\
+                        **startApplicationParams 		\
+                    ).run()					\
+            ]
+    ).run()
