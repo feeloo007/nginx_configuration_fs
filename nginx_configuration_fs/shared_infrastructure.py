@@ -410,15 +410,9 @@ class TwistedDaemon( object ):
                 with TwistedDaemon._l_process_lock:
                     self._l_process.append( self )
 
-                sys.stderr.write( "PP connectionMade!" + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
-                #self.transport.closeStdin() # tell them we're done
+                self.transport.closeStdin() # tell them we're done
 
             def outReceived( self, data ):
-
-                sys.stderr.write( 'PP out %s' % data + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
-                sys.stderr.write( "PP %r" % self.d_events )
 
                 with TwistedDaemon._d_event_lock:
                      map(
@@ -428,10 +422,6 @@ class TwistedDaemon( object ):
 
             def errReceived( self, data ):
 
-                sys.stderr.write( 'PP err %s' % data + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
-                sys.stderr.write( "PP %r" % self.d_events )
-
                 with TwistedDaemon._d_event_lock:
                      map(
                          lambda le: le( data ),
@@ -439,29 +429,25 @@ class TwistedDaemon( object ):
                      )
 
             def inConnectionLost( self ):
-                sys.stderr.write( "PP inConnectionLost! stdin is closed! (we probably did it)" + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
+
+                pass
 
             def outConnectionLost( self ):
-                sys.stderr.write( "PP outConnectionLost! The child closed their stdout!" + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
+                
+                pass
 
             def errConnectionLost( self ):
-                sys.stderr.write( "PP errConnectionLost! The child closed their stderr." + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
+                
+                pass 
 
             def processExited( self, reason ):
-                sys.stderr.write( "PP processExited, status %d" % (reason.value.exitCode,) + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
+                
+                pass
 
             def processEnded( self, reason ):
 
                 with TwistedDaemon._l_process_lock:
                     self._l_process.remove( self )
-
-                sys.stderr.write( "PP processEnded, status %d" % (reason.value.exitCode,) + os.linesep )
-                sys.stderr.write( "PP quitting" + os.linesep )
-                sys.stderr.write( "PP %r" % self._l_process + os.linesep )
 
                 if not self._l_process:
                    reactor.stop()
@@ -473,19 +459,15 @@ class TwistedDaemon( object ):
 
             def connectionMade( self ):
 
-                sys.stderr.write( 'TT connection made' + os.linesep )
-
                 self.factory.ptdp.add_outReceived( self, lambda data: self.transport.write( data ) )
                 self.factory.ptdp.add_errReceived( self, lambda data: self.transport.write( data ) )
 
             def dataReceived( self, data ):
 
-                sys.stderr.write( 'TT data received' + os.linesep )
-                self.factory.ptdp.transport.write( data )
+                """ Pas de transmission de donnees depuis le telnet"""
+                pass
 
             def connectionLost( self, reason ):
-
-                sys.stderr.write( 'TT connection lost' + os.linesep )
 
                 self.factory.ptdp.del_outReceived( self )
                 self.factory.ptdp.del_errReceived( self )
@@ -602,8 +584,8 @@ class ContextualizedFUSE( fuse.FUSE ):
                         if named_mount_options <> ''
                         else {}
                     ).iteritems()
-                    if k not in 							\
-                        ContextualizedFUSE.__L_FORBIDDEN_FUSE_OPTIONS__ + 		\
+                    if k not in 								\
+                        ContextualizedFUSE.__L_FORBIDDEN_FUSE_OPTIONS__ + 			\
                         operations.__L_FORBIDDEN_NAMED_MOUNT_OPTIONS__
                 ] +
                 [
