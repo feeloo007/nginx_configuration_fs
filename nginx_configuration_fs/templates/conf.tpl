@@ -27,7 +27,12 @@ server {
     resolver 			{{ nameserver }};
     {% endfor -%}
 
-    listen   			{{ resolver.query( server, 'A' )[ 0 ].address }}:{{ port }}{% if ssl_configuration %} ssl{% endif -%};
+    {% for r in resolver.query( server, 'A' ) -%}
+    listen   			{{ r.address }}:{{ port }}{% if ssl_configuration %} ssl{% endif -%};
+    {% endfor -%}
+    {% for r in resolver.query( server, 'AAAA' ) -%}
+    listen   			[{{ r.address }}]:{{ port }} ipv6only=on{% if ssl_configuration %} ssl{% endif -%};
+    {% endfor -%}
 
     {% if ssl_configuration -%}
     ssl_certificate 		{{ ssl_configuration.ssl_certificate_filepath }};

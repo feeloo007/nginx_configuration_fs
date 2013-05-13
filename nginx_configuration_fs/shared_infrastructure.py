@@ -600,3 +600,21 @@ class ContextualizedFUSE( fuse.FUSE ):
                 operations.__D_DEFAULT_NAMED_MOUNT_OPTIONS__.items()
             )
         )
+
+
+###################################################
+# Interception d'une exeception sur l'impossibilite
+# de ressourdre un nom
+###################################################
+
+def catch_NoNamesservers( f ):
+
+    import dns.resolver
+
+    def wrapped( *args, **kwargs ):
+        try:
+            return f( *args, **kwargs )
+        except dns.resolver.NoNameservers:
+            return []
+
+    return wrapped
