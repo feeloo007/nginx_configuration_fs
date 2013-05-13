@@ -6,15 +6,11 @@ from 	contextlib 		import closing
 
 import 	sys
 
-from 	fuse 			import FUSE
-
 import	os
 
 import 	json
 
 from 	pwd 			import getpwnam
-
-import 	pprint
 
 import	colorama
 
@@ -43,18 +39,6 @@ __RESTART_NGINX__				= 'restart_nginx'
 __SSL_CERTIFICATE_FILENAME__			= 'ssl_certificate_filename'
 __SSL_CERTIFICATE_KEY_FILENAME__		= 'ssl_certificate_key_filename'
 __URL2APP_FILENAME__				= 'url2app_filename'
-__L_FORBIDDEN_NAMED_MOUNT_OPTIONS__		= \
-    (
-        'ro',
-        'rw',
-        'sync',
-        'async',
-        'allow_other',
-        'sync_read',
-        'async_read',
-        'encoding',
-    )
-
 
 @plac.annotations(
     configuration_path	= 						\
@@ -199,68 +183,49 @@ def main_process(
     **kwargs
 ):
 
-    ssl_conf 	= ssl_configuration.SSLConfiguration(
-        d_config[ __ROOT_SSL_CONFIGURATION__ ],
-        d_config[ __RESOLVER_CONF__ ],
-        d_config[ __SSL_CERTIFICATE_FILENAME__ ],
-        d_config[ __SSL_CERTIFICATE_KEY_FILENAME__ ],
-        d_config[ __RESTART_NGINX__ ],
-    )
+    ssl_conf 	= 					\
+        ssl_configuration.SSLConfiguration(
+            d_config[ __ROOT_SSL_CONFIGURATION__ ],
+            d_config[ __RESOLVER_CONF__ ],
+            d_config[ __SSL_CERTIFICATE_FILENAME__ ],
+            d_config[ __SSL_CERTIFICATE_KEY_FILENAME__ ],
+            d_config[ __RESTART_NGINX__ ],
+        )
 
-    fuse 		= FUSE(
-        nginx_configuration_fs.NGINXConfigurationFS(
-            agnostic_configuration.AgnosticConfiguration(
-                d_config[ __ROOT_AGNOSTIC_CONFIGURATION__ ],
+    fuse 		= 					\
+        shared_infrastructure.ContextualizedFUSE(
+            nginx_configuration_fs.NGINXConfigurationFS(
+                agnostic_configuration.AgnosticConfiguration(
+                    d_config[ __ROOT_AGNOSTIC_CONFIGURATION__ ],
+                    d_config[ __RESOLVER_CONF__ ],
+                    d_config[ __MOUNT_FILENAME__ ],
+                    d_config[ __UNMOUNT_FILENAME__ ],
+                    d_config[ __REDIRECT_FILENAME__ ],
+                    d_config[ __RESTART_NGINX__ ],
+                    ssl_conf
+                ),
+                mountpoint,
+                uid_owner,
+                gid_owner,
                 d_config[ __RESOLVER_CONF__ ],
                 d_config[ __MOUNT_FILENAME__ ],
                 d_config[ __UNMOUNT_FILENAME__ ],
                 d_config[ __REDIRECT_FILENAME__ ],
+                d_config[ __ERROR_STATUS_FILENAME__ ],
                 d_config[ __RESTART_NGINX__ ],
-                ssl_conf
+                ssl_conf,
+                url2app_configuration.URL2AppConfiguration(
+                    d_config[ __ROOT_URL2APP_CONFIGURATION__ ],
+                    d_config[ __RESOLVER_CONF__ ],
+                    d_config[ __URL2APP_FILENAME__ ],
+                    d_config[ __RESTART_NGINX__ ],
+                    ssl_conf
+                ),
             ),
             mountpoint,
-            uid_owner,
-            gid_owner,
-            d_config[ __RESOLVER_CONF__ ],
-            d_config[ __MOUNT_FILENAME__ ],
-            d_config[ __UNMOUNT_FILENAME__ ],
-            d_config[ __REDIRECT_FILENAME__ ],
-            d_config[ __ERROR_STATUS_FILENAME__ ],
-            d_config[ __RESTART_NGINX__ ],
-            ssl_conf,
-            url2app_configuration.URL2AppConfiguration(
-                d_config[ __ROOT_URL2APP_CONFIGURATION__ ],
-                d_config[ __RESOLVER_CONF__ ],
-                d_config[ __URL2APP_FILENAME__ ],
-                d_config[ __RESTART_NGINX__ ],
-                ssl_conf
-            ),
-        ),
-        mountpoint,
-        foreground	= True,
-        ro	    	= True,
-        allow_other	= True,
-        sync_read 	= True,
-        sync		= True,
-        encoding    	= 'utf-8',
-        **dict(
-            ( k, v )
-            for k, v in
-            (
-                dict(
-                    ( lambda param = param.split( '=' ):
-                        ( param[ 0 ], param[ 1 ] )
-                        if param.count == 2
-                        else ( param, True )
-                    )( param )
-                    for param in named_mount_options.split(',')
-                )
-                if named_mount_options <> ''
-                else {}
-            ).iteritems()
-            if k not in __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__
+            named_mount_options,
+            **kwargs
         )
-    )
 
 
 if __name__ == '__main__':
@@ -276,15 +241,18 @@ if __name__ == '__main__':
                 ),						\
         l_le_startApplication	= 				\
             [							\
-                lambda startApplicationParams: 			\
+                lambda startApplicationParams, l_process: 	\
                     shared_infrastructure.TwistedDaemon( 	\
                         '''
 import  nginx_configuration_fs.main
 
+kwargs = %r
+
 nginx_configuration_fs.main.main_process(
-   **%r
+   **kwargs
 )''',								\
+                        l_process,				\
                         **startApplicationParams 		\
-                    ).run()					\
+                    ).run(),					\
             ]
     ).run()

@@ -31,6 +31,21 @@ import	ssl_configuration
 
 class NGINXConfigurationFS(LoggingMixIn, Operations):
 
+    __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__             = \
+        (
+            'ro',
+            'rw',
+        )
+
+    __D_DEFAULT_NAMED_MOUNT_OPTIONS__               = \
+        {
+            'ro' : True,
+        }
+
+    __L_AUTHORIZED_SUPPLEMENTARIES_FUSE_OPTIONS__   = \
+        (
+        )
+
     __READ_CTX__			= 'READ_CTX'
     __ATTR_CTX__			= 'ATTR_CTX'
     __ID_SERVER__			= 'ID_SERVER'
