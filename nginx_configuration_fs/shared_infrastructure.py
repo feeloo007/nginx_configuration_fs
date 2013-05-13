@@ -510,7 +510,8 @@ class TwistedDaemon( object ):
             telnet_server 	= 		\
                 reactor.listenTCP(
                     0,
-                    TelnetFactory( ptdp )
+                    TelnetFactory( ptdp ),
+                    interface 	= 'localhost'
                 )
 
             # Alimentation de la variable permetatnt de construire
