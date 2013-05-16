@@ -227,6 +227,6 @@ include {{ root_nginx_configuration }}{{ converted_mount_map_filename }};
 include /etc/mdp/tmp.d/access_log_provisoire;
 {% endif %}
 
-{% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+{% if ( server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) ) or ( server == 'Z00-R7-D1-NGV01' and ( port == '80' or port == '443' ) ) %}
 include /etc/mdp/tmp.d/www_static_url_2_entity_provisoire;
 {% endif %}
