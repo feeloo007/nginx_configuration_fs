@@ -52,7 +52,7 @@ server {
 
     location / {
 
-    {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+    {% if ( server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) ) or ( server == 'Z00-R7-D1-NGV01' and ( port == '80' or port == '443' ) ) %}
         root /home/z00_www_static/;
     {% else %}
         root /usr/share/nginx/html/;
@@ -61,7 +61,7 @@ server {
         location = /__BACKEND_FAILED__.html {
             internal;
 
-            {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+            {% if ( server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) ) or ( server == 'Z00-R7-D1-NGV01' and ( port == '80' or port == '443' ) ) %}
             try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
                         /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
                         /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
@@ -80,7 +80,7 @@ server {
         location = /__NO_CONFIGURATION__.html {
             internal;
 
-            {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+            {% if ( server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) ) or ( server == 'Z00-R7-D1-NGV01' and ( port == '80' or port == '443' ) ) %}
             try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
                         /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
                         /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
@@ -100,7 +100,7 @@ server {
             internal;
             ssi on;
 
-            {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+            {% if ( server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) ) or ( server == 'Z00-R7-D1-NGV01' and ( port == '80' or port == '443' ) ) %}
             try_files 	/{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
                         /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
                         /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
@@ -136,7 +136,7 @@ server {
 
         # Construction permettant d'utiliser location @backend et de servir les pages d'erreurs
         # Si $uri = egal une page d'erreur, c'est la page d'erreur qui est servie
-        {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
+        {% if ( server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) ) or ( server == 'Z00-R7-D1-NGV01' and ( port == '80' or port == '443' ) ) %}
         try_files               /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/$host/$uri
                                 /{{server}}/{{port}}/$www_static_url_2_entity_provisoire/__default__/$uri
                                 /{{server}}/__default__/$www_static_url_2_entity_provisoire/$host/$uri
