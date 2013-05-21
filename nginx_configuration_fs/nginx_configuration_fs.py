@@ -29,6 +29,8 @@ import	shared_infrastructure
 
 import	ssl_configuration
 
+import	url2app_configuration
+
 class NGINXConfigurationFS(LoggingMixIn, Operations):
 
     __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__             = \
@@ -81,6 +83,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._error_status_filename	= error_status_filename
         self._restart_nginx		= restart_nginx
         self._ssl_configuration		= ssl_configuration
+        self._url2app_configuration	= url2app_configuration
 
         self._l_bad_configurations	= []
 
@@ -277,6 +280,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         return 									\
             len( self.l_bad_configurations ) 				+ 	\
             len( self._agnostic_configuration.l_bad_configurations ) 	+  	\
+            len( self._url2app_configuration.l_bad_configurations )     +	\
             len( self._ssl_configuration.l_bad_configurations )			\
             != 0
     have_bad_configurations = property( get_have_bad_configurations, None, None )
@@ -574,6 +578,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         l_bad_id = [ 
             self._agnostic_configuration._root_agnostic_configuration,
+            self._url2app_configuration._root_url2app_configuration,
             self._ssl_configuration._root_ssl_configuration,
             'FS', 
         ]
@@ -581,6 +586,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         d_bad = {
            self._agnostic_configuration._root_agnostic_configuration:
                self._agnostic_configuration.l_bad_configurations,
+           self._url2app_configuration._root_url2app_configuration:
+               self._url2app_configuration.l_bad_configurations,
            self._ssl_configuration._root_ssl_configuration:
                self._ssl_configuration.l_bad_configurations,
            'FS':
