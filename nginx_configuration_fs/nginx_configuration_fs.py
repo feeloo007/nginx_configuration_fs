@@ -260,6 +260,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 	
         self._agnostic_configuration.notifier.start()
 
+        self._url2app_configuration.notifier.start()
+
         self._ssl_configuration.notifier.start()
 
 
@@ -767,6 +769,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._template_notifier.stop()
 
         self._ssl_configuration.notifier.stop()
+
+        self._url2app_configuration.notifier.stop()
 
         self._agnostic_configuration.notifier.stop()
 
