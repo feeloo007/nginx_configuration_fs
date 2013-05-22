@@ -309,7 +309,7 @@ class URL2AppConfiguration():
                 # n'est present, la configuration n'est
                 # pas prise en compte
 
-                url2app_filepath 		= 						\
+                url2app_filepath 		= 					\
                     self._root_url2app_configuration.rstrip( os.sep ) + os.sep + 	\
                     server + os.sep + 							\
                     port + os.sep + 							\
@@ -327,7 +327,7 @@ class URL2AppConfiguration():
                         ) as f:
         
                             for line in [ l.rstrip() for l in f.readlines() ]:
-                                if re.match( URL2Appconfiguration._comment_pattern, line ):
+                                if re.match( URL2AppConfiguration._comment_pattern, line ):
                                     continue
         
                                 m = re.match( pattern, line )
