@@ -50,7 +50,7 @@ class URL2AppConfiguration():
         pass
 
     _url2app_pattern			= 	\
-        '''^\s*%s\s+''' % (
+        '''^\s*%s\s*(?P<appcode>[A-Z][0-9]{2})\s*(?P<env>[0-9A-Z]{2})\s*(?P<aera>[DV][0-9A-F])\s*(?P<virtual_ngv_num>[0-9]{2})\s*''' % (
             rfc3987.format_patterns(
                 URI		= 'URI', 
             )['URI'],
@@ -95,7 +95,11 @@ class URL2AppConfiguration():
         URL2AppConfiguration.add_to_configuration( 
             d, 
             lambda d: {
-                        #'uri': d[ 'URI' ],
+                        'uri'			: d[ 'URI' ],
+                        'appcode'		: d[ 'appcode' ],
+                        'env'			: d[ 'env' ],
+                        'aera'			: d[ 'aera' ],
+                        'virtual_ngv_num'	: d[ 'virtual_ngv_num' ],
                     }, 
             d_configurations,
             filepath,
