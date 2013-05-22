@@ -43,6 +43,7 @@ class URL2AppConfiguration():
         d, 
         le_mapping,
         d_configurations,
+        filepath,
         current_server, 
         current_port, 
     ):
@@ -75,6 +76,7 @@ class URL2AppConfiguration():
             port,
             mapping_type, 
             l_bad_configurations, 
+            '',
         )
 
 
@@ -87,6 +89,7 @@ class URL2AppConfiguration():
             port, 
             mapping_type,
             l_bad_configurations, 
+            '',
         )
 
         URL2AppConfiguration.add_to_configuration( 
@@ -98,7 +101,6 @@ class URL2AppConfiguration():
             filepath,
             server, 
             port, 
-            mapping_type, 
         )
 
 
