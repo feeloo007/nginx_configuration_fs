@@ -46,8 +46,37 @@ class URL2AppConfiguration():
         filepath,
         current_server, 
         current_port, 
+        current_mapping_type,
+        le_sort = lambda x: x,
     ):
-        pass
+        d_configurations[ current_server ][ current_port ][ current_mapping_type ][ 'mappings' ] = \
+            (
+                lambda l, e, le_sort = le_sort:
+                    [ x for x in l if le_sort( x ) >  le_sort( e ) ] 	+
+                    [ e ] 						+
+                    [ x for x in l if le_sort( x ) <= le_sort( e ) ]
+            )(
+                d_configurations.setdefault(
+                    current_server,
+                    {}
+                ).setdefault(
+                    current_port,
+                    {}
+                ).setdefault(
+                    current_mapping_type,
+                    shared_infrastructure.DictWithMaskableKeys(
+                        {
+                            'times': {
+                                'ctime': '%s' % ( os.path.getctime( filepath ) ),
+                                'mtime': '%s' % ( os.path.getmtime( filepath ) ),
+                            },
+                            'mappings': []
+                        },
+                        [ 'times' ]
+                    )
+                )[ 'mappings' ],
+                le_mapping( d )
+            )
 
     _url2app_pattern			= 	\
         '''^\s*%s\s*(?P<appcode>[A-Z][0-9]{2})\s*(?P<env>[0-9A-Z]{2})\s*(?P<aera>[DV][0-9A-F])\s*(?P<virtual_ngv_num>[0-9]{2})\s*''' % (
@@ -105,6 +134,8 @@ class URL2AppConfiguration():
             filepath,
             server, 
             port, 
+            mapping_type,
+            le_sort     = lambda x: ( x[ 'uri' ] )
         )
 
 
