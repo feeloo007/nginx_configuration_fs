@@ -245,6 +245,10 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
                      shared_infrastructure.cache_container_agnostic_configuration.clear()
 
+                     shared_infrastructure.cache_container_ssl_configuration.clear()
+
+                     shared_infrastructure.cache_container_url2app_configuration.clear()
+
                      shared_infrastructure.cache_container_nginx_fs.clear()
 
              process_IN_MODIFY	= process_evt
