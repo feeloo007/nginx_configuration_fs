@@ -186,11 +186,7 @@ class URL2AppConfiguration(
 		     return None
 
                  if re.match( 
-                     '^%s|%s|%s$' % ( 
-                         self._url2app_filename, 
-                         self._unurl2app_filename, 
-                         self._redirect_filename 
-                     ),
+                     self._url2app_filename, 
                      path_elements[ 2 ]
                  ): 
 
