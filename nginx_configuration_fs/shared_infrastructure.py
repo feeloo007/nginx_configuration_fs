@@ -618,3 +618,51 @@ def catch_NoNamesservers( f ):
             return []
 
     return wrapped
+
+
+#####################################
+# Interface pour add_to_configuration
+#####################################
+
+class IAddToConfigurationWithMappingType():
+
+    @staticmethod
+    def add_to_configuration(
+        d,
+        le_mapping,
+        d_configurations,
+        filepath,
+        current_server,
+        current_port,
+        current_mapping_type,
+        le_sort = lambda x: x,
+    ):
+        d_configurations[ current_server ][ current_port ][ current_mapping_type ][ 'mappings' ] = \
+            (
+                lambda l, e, le_sort = le_sort:
+                    [ x for x in l if le_sort( x ) >  le_sort( e ) ]    +
+                    [ e ]                                               +
+                    [ x for x in l if le_sort( x ) <= le_sort( e ) ]
+            )(
+                d_configurations.setdefault(
+                    current_server,
+                    {}
+                ).setdefault(
+                    current_port,
+                    {}
+                ).setdefault(
+                    current_mapping_type,
+                    DictWithMaskableKeys(
+                        {
+                            'times': {
+                                'ctime': '%s' % ( os.path.getctime( filepath ) ),
+                                'mtime': '%s' % ( os.path.getmtime( filepath ) ),
+                            },
+                            'mappings': []
+                        },
+                        [ 'times' ]
+                    )
+                )[ 'mappings' ],
+                le_mapping( d )
+            )
+
