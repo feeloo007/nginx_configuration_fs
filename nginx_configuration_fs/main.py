@@ -221,6 +221,7 @@ def main_process(
                     d_config[ __RESTART_NGINX__ ],
                     ssl_conf
                 ),
+                d_config[ __URL2APP_FILENAME__ ],
             ),
             mountpoint,
             named_mount_options,

@@ -68,6 +68,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         restart_nginx,
         ssl_configuration,
         url2app_configuration,
+        url2app_filename,
     ):
 
         self._agnostic_configuration	= agnostic_configuration
@@ -84,18 +85,26 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._restart_nginx		= restart_nginx
         self._ssl_configuration		= ssl_configuration
         self._url2app_configuration	= url2app_configuration
+        self._url2app_filename		= url2app_filename
 
         self._l_bad_configurations	= []
+
+        self._l_configurations 	= 					\
+            (								\
+                self._agnostic_configuration,				\
+                self._url2app_configuration,				\
+            )
 
         self._pattern_converted_conf_filenames	= \
            '^(?P<server>.*)-(?P<port>\d+)\.conf$'
 
         self._pattern_converted_map_filenames	= \
             '^(?P<mapping_type>' + \
-            '%s|%s|%s' % ( 
+            '%s|%s|%s|%s' % (
                 self._mount_filename, 
                 self._unmount_filename, 
                 self._redirect_filename, 
+                self._url2app_filename,
             ) + ')-(?P<server>.*)-(?P<port>\d+)\.map$'
 
         # Getion des templates de read
@@ -126,6 +135,9 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             self._unmount_filename: [
                 self._unmount_filename,
                 self._mount_filename
+            ],
+            self._url2app_filename: [
+                self._url2app_filename,
             ],
         }
 
@@ -162,6 +174,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                  ],
                              self._unmount_filename: 		\
                                  [ self._unmount_filename ],
+                             self._url2app_filename:		\
+                                 [ self._url2app_filename ],
                          },
                 },
             NGINXConfigurationFS.__READ_CTX__:			\
@@ -180,6 +194,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                  [ self._redirect_filename ],
                              self._unmount_filename: 		\
                                  [ self._unmount_filename ],
+                             self._url2app_filename: 		\
+                                 [ self._url2app_filename ],
                          },
                 },
         }
@@ -262,9 +278,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         self._template_notifier.start()
 	
-        self._agnostic_configuration.notifier.start()
-
-        self._url2app_configuration.notifier.start()
+        for configuration in self._l_configurations:
+            configuration.notifier.start()
 
         self._ssl_configuration.notifier.start()
 
@@ -307,7 +322,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         'conf',
                         self._mount_filename,
                         self._unmount_filename,
-                        self._redirect_filename
+                        self._redirect_filename,
+                        self._url2app_filename,
                     ]
                 )
             )
@@ -386,7 +402,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                 list.__add__,
                                 map(
                                     process_id_configuration,
-                                    self._agnostic_configuration.id_configurations
+                                    self._agnostic_configuration.id_configurations +	\
+                                    self._url2app_configuration.id_configurations
                                 ) or [ [] ]
                             )
                         )
@@ -481,28 +498,46 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         path_elements           = filter( None,  path.split( '/' ) )
 
+        elements_selector	=						\
+            self.get_id_from_filename_elements(
+                path_elements,
+                NGINXConfigurationFS.__ATTR_CTX__
+            )
+
         st = dict(
             st_mode	=	( ( S_IFDIR | 0755 ) if len( path_elements ) == 0 else ( S_IFREG | 0644 ) ), 
             st_nlink	=	2, 
             st_size	= 	( 4096 * int( 1 + ceil( len( self.readdir( path ) ) / 4096 ) ) ) if len( path_elements ) == 0 else len( self.read( path, -1, 0, fh ) ),
-            st_atime 	= 	self._agnostic_configuration.get_last_atime(
-                                    *self.get_id_from_filename_elements(
-                                        path_elements,
-                                        NGINXConfigurationFS.__ATTR_CTX__
-                                    )
-                                ),
-            st_ctime 	= 	self._agnostic_configuration.get_last_ctime(
-                                    *self.get_id_from_filename_elements(
-                                        path_elements,
-                                        NGINXConfigurationFS.__ATTR_CTX__
-                                    )
-                                ),
-            st_mtime 	= 	self._agnostic_configuration.get_last_mtime(
-                                    *self.get_id_from_filename_elements(
-                                        path_elements,
-                                        NGINXConfigurationFS.__ATTR_CTX__
-                                    )
-                                ), 
+            st_atime 	= 							\
+                max(								\
+                    map(							\
+                        lambda configuration:					\
+                            configuration.get_last_atime(			\
+                                *elements_selector				\
+                            ),							\
+                        self._l_configurations					\
+                    ) or [ 0 ]							\
+               ), 								\
+            st_ctime 	= 							\
+                max(								\
+                    map(							\
+                        lambda configuration:					\
+                            configuration.get_last_ctime(			\
+                                *elements_selector				\
+                            ),							\
+                        self._l_configurations					\
+                    ) or [ 0 ]							\
+               ), 								\
+            st_mtime 	= 							\
+                max(								\
+                    map(							\
+                        lambda configuration:					\
+                            configuration.get_last_mtime(			\
+                                *elements_selector				\
+                            ),							\
+                        self._l_configurations					\
+                    ) or [ 0 ]							\
+               ), 								\
             st_uid	=	self._uid_owner,
             st_gid	=	self._gid_owner,
         )
@@ -667,6 +702,12 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         port, 
                         self._mount_filename 
                     ),
+                converted_url2app_map_filename	= \
+                    self.get_converted_map_filename(
+                        server,
+                        port,
+                        self._url2app_filename
+                    ),
                 root_nginx_configuration	= \
                     self._root_nginx_configuration.rstrip( os.sep ) + os.sep,
                 ssl_configuration		= \
@@ -774,9 +815,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         self._ssl_configuration.notifier.stop()
 
-        self._url2app_configuration.notifier.stop()
-
-        self._agnostic_configuration.notifier.stop()
+        for configuration in self._l_configurations:
+            configuration.notifier.stop()
 
 
     access 	= None
