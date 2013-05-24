@@ -384,42 +384,28 @@ class URL2AppConfiguration(
         return False
 
 
-    @synchronized( _configurations_lock )
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def get_id_configurations( self ):
-
-        return reduce(
-            list.__add__,
-            map( 
-                lambda ( server, portsv ): reduce( 
-                    list.__add__, 
-                    map( 
-                       lambda ( port, mappings_typev ): map(
-                           lambda mapping_type: [ server, port, mapping_type ],
-                               mappings_typev.keys(),
-                           ),
-                           portsv.items()
-                    )
-                ), 
-                self.d_configurations.items()
-            ) if self.d_configurations.items() else [ [] ]
+    get_id_configurations	=				\
+        synchronized(
+            _configurations_lock
+        )(
+            volatile.cache(
+                shared_infrastructure.cache_key,
+                lambda *args: 					\
+                    shared_infrastructure.cache_container_url2app_configuration
+            )(
+                shared_infrastructure.get_id_configurations
+            )
         )
     id_configurations 	= property( get_id_configurations, None, None )
 
 
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def filter_id_configurations( 
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-        return filter(
-            lambda ( server, port, mapping_type ): \
-                re.match( pattern_server, server ) 	and \
-                re.match( pattern_port, port ) 		and \
-                re.match( pattern_mapping_type, mapping_type ),
-            self.id_configurations
+    filter_id_configurations	=				\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 					\
+                shared_infrastructure.cache_container_url2app_configuration
+        )(
+            shared_infrastructure.filter_id_configurations
         )
 
     
