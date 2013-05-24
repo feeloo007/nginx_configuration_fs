@@ -769,11 +769,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         port 
                     ),
                 mount_configurations		= \
-                    self._agnostic_configuration.d_configurations[ 
-                        server
-                    ][ 
-                        port 
-                    ].get( 
+                    self._agnostic_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
                         self._mount_filename,
                         {}, 
                     ).get(
@@ -781,11 +783,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         []
                     ),
                 unmount_configurations		= \
-                    self._agnostic_configuration.d_configurations[ 
-                        server
-                    ][ 
-                        port 
-                    ].get( 
+                    self._agnostic_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
                         self._unmount_filename,
                         {}
                     ).get(
@@ -793,11 +797,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         []
                     ),
                 redirect_configurations		= \
-                    self._agnostic_configuration.d_configurations[ 
-                        server
-                    ][ 
-                        port 
-                    ].get( 
+                    self._agnostic_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
                         self._redirect_filename,
                         {}
                     ).get(
@@ -806,6 +812,20 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                     ),
                 ssl_configuration		= \
                     self._ssl_configuration.get_ssl_configuration( server, port ),
+                url2app_configurations		= \
+                    self._url2app_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
+                        self._url2app_filename,
+                        {}
+                    ).get(
+                        'mappings',
+                        []
+                    ),
         ).encode( 'utf-8' )
 
 
