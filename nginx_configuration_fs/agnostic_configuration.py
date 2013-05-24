@@ -26,9 +26,7 @@ import 	pyinotify
 
 import  subprocess
 
-import 	hashlib
-
-import 	json
+import  hashlib
 
 import	shared_infrastructure
 
@@ -800,30 +798,22 @@ class AgnosticConfiguration(
         ) 
  
 
-    @synchronized( _configurations_lock )
-    def _get_version_configurations( self, d_configurations ):
-
-        return \
-            hashlib.sha1(
-                json.dumps(
-                    d_configurations,
-                    sort_keys	= True,
-                    cls 	= shared_infrastructure.DictWithMaskableKeysEncoder,
-                )
-            ).hexdigest()
+    _get_version_configurations =                                       \
+        synchronized(
+            _configurations_lock
+        )(
+            shared_infrastructure._get_version_configurations
+    )
+    get_version_configurations  = _get_version_configurations
 
 
-    get_version_configurations	= _get_version_configurations
-
-    @synchronized( _configurations_lock )
-    def get_current_version_configurations( self ):
-
-        return \
-            self._get_version_configurations(
-                self.d_configurations
-            )
-
-    current_version_configurations	= 	\
+    get_current_version_configurations =                                \
+        synchronized(
+            _configurations_lock
+        )(
+            shared_infrastructure.get_current_version_configurations
+    )
+    current_version_configurations      =                               \
         property(
             get_current_version_configurations,
             None,

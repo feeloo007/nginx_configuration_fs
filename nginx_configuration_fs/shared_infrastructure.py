@@ -13,6 +13,8 @@ import  rfc3987
 
 import	collections
 
+import 	hashlib
+
 import	json
 
 import 	os
@@ -666,3 +668,28 @@ class IAddToConfigurationWithMappingType():
                 le_mapping( d )
             )
 
+
+###########################################
+# Function generique calculant la signature
+# d'une configuration manipulee par
+# IAddToConfigurationWithMappingType
+###########################################
+
+def _get_version_configurations( self, d_configurations ):
+
+    return \
+        hashlib.sha1(
+            json.dumps(
+                d_configurations,
+                sort_keys   = True,
+                cls         = DictWithMaskableKeysEncoder,
+            )
+        ).hexdigest()
+
+
+def get_current_version_configurations( self ):
+
+    return  \
+        self._get_version_configurations(
+            self.d_configurations
+        )
