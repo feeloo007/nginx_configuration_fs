@@ -58,7 +58,7 @@ class URL2AppConfiguration(
         l_bad_configurations,
     ):
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_url2app_configuration,  
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
@@ -70,7 +70,7 @@ class URL2AppConfiguration(
 
 
         shared_infrastructure.listen_ssl_process_uri( 
-            lambda: self._root_url2app_configuration,  
+            lambda: self._root_configuration,
             lambda: self._ssl_configuration,
             d, 
             line, 
@@ -101,14 +101,14 @@ class URL2AppConfiguration(
 
     def __init__(
         self, 
-        root_url2app_configuration,
+        root_configuration,
         resolver_conf,
         url2app_filename,
         restart_nginx,
         ssl_configuration
     ):
 
-        self._root_url2app_configuration	= root_url2app_configuration
+        self._root_configuration	= root_configuration
 
         self._resolver_conf			= resolver_conf
 
@@ -158,7 +158,7 @@ class URL2AppConfiguration(
                      filter( 
                          None, 
                          event.pathname[  
-                             len( self._root_url2app_configuration.rstrip( os.sep ) + os.sep ):
+                             len( self._root_configuration.rstrip( os.sep ) + os.sep ):
                          ].split( os.sep )
                      )
 
@@ -211,7 +211,7 @@ class URL2AppConfiguration(
         self._notifier.coalesce_events()
 
         wm.add_watch( 
-            self._root_url2app_configuration, 
+            self._root_configuration,
             mask, 
             rec=True,
             auto_add=True
@@ -256,22 +256,22 @@ class URL2AppConfiguration(
         for server in [ 
                        s 
                        for s 
-                       in os.listdir( self._root_url2app_configuration )
-                       if os.path.isdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + s )
+                       in os.listdir( self._root_configuration )
+                       if os.path.isdir( self._root_configuration.rstrip( os.sep ) + os.sep + s )
                       ]:
 
             # Si le nom ne correspond pas a un nom resolvable
             # la configuration n'est pas prise en compte
             if not self._resolver.query( server, 'A' ) and not self._resolver.query( server, 'AAAA' ):
-                l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_url2app_configuration, server, ) )
+                l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_configuration, server, ) )
                 continue
 
 
             try:
                 # Si le repertoire ne contient pas de configuration
                 # de port, la configuration n'est pas prise en compte
-                if not os.listdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + server ):
-                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_url2app_configuration, server, ) )
+                if not os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server ):
+                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_configuration, server, ) )
                     continue
             except:
                 # En cas de suppression de la racine
@@ -286,7 +286,7 @@ class URL2AppConfiguration(
             for port in [ 
                          p
                          for p
-                         in os.listdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + server )
+                         in os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server )
                       ]:
 
                 # Si le repertoire ne correspond pas au format d'un nom de port
@@ -295,7 +295,7 @@ class URL2AppConfiguration(
                     if not( re.match( '\d{1,5}', port ) and int( p ) <= 65535 ):
                         raise Exception()
                 except:
-                        l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_url2app_configuration, server, port ) )
+                        l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_configuration, server, port ) )
                         continue
 
                 # Si aucun fichier de mapping
@@ -303,7 +303,7 @@ class URL2AppConfiguration(
                 # pas prise en compte
 
                 url2app_filepath 		= 					\
-                    self._root_url2app_configuration.rstrip( os.sep ) + os.sep + 	\
+                    self._root_configuration.rstrip( os.sep ) + os.sep + 		\
                     server + os.sep + 							\
                     port + os.sep + 							\
                     self._url2app_filename
@@ -328,7 +328,7 @@ class URL2AppConfiguration(
                                     l_bad_configurations.append( 
                                         ( 
                                             'invalid format %s' % ( line ), 
-                                            self._root_url2app_configuration, 
+                                            self._root_configuration,
                                             server, 
                                             port, 
                                             mapping_type 
@@ -365,7 +365,7 @@ class URL2AppConfiguration(
 
 
         if len( d_configurations ) == 0:
-            l_bad_configurations.append( ( 'no configuration available', self._root_url2app_configuration, ) )
+            l_bad_configurations.append( ( 'no configuration available', self._root_configuration, ) )
 
         if  													\
                  reload_without_version_control 								\
@@ -418,7 +418,7 @@ class URL2AppConfiguration(
     ):
         return map( 
             lambda ( server, port, mapping_type ): 			\
-                self._root_url2app_configuration.rstrip( os.sep ) + os.sep +	
+                self._root_configuration.rstrip( os.sep ) + os.sep +
                 server + os.sep +				
                 port + os.sep +					
                 mapping_type,

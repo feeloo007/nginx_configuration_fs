@@ -62,7 +62,7 @@ class AgnosticConfiguration(
     ):
 
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_agnostic_configuration,  
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
@@ -73,7 +73,7 @@ class AgnosticConfiguration(
         )
 
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_agnostic_configuration,  
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
@@ -84,7 +84,7 @@ class AgnosticConfiguration(
         )
 
         shared_infrastructure.listen_ssl_process_uri( 
-            lambda: self._root_agnostic_configuration,  
+            lambda: self._root_configuration,
             lambda: self._ssl_configuration,
             d, 
             line, 
@@ -102,7 +102,7 @@ class AgnosticConfiguration(
             l_ips.extend( [ '[%s]' % ( ip.address ) for ip in self._resolver.query( host, 'AAAA' ) ] )
 
             if not l_ips:
-               l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_agnostic_configuration, server, port, self._mount_filename ) )
+               l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_configuration, server, port, self._mount_filename ) )
 
             return l_ips
 
@@ -217,7 +217,7 @@ class AgnosticConfiguration(
         l_bad_configurations,
     ):
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_agnostic_configuration,
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
@@ -228,7 +228,7 @@ class AgnosticConfiguration(
         )
 
         shared_infrastructure.listen_ssl_process_uri( 
-            lambda: self._root_agnostic_configuration,
+            lambda: self._root_configuration,
             lambda: self._ssl_configuration,
             d, 
             line, 
@@ -276,7 +276,7 @@ class AgnosticConfiguration(
         l_bad_configurations,
     ):
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_agnostic_configuration,
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
@@ -287,7 +287,7 @@ class AgnosticConfiguration(
         )
 
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_agnostic_configuration,
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
@@ -298,7 +298,7 @@ class AgnosticConfiguration(
         )
 
         shared_infrastructure.listen_ssl_process_uri( 
-            lambda: self._root_agnostic_configuration,
+            lambda: self._root_configuration,
             lambda: self._ssl_configuration,
             d, 
             line, 
@@ -326,7 +326,7 @@ class AgnosticConfiguration(
 
     def __init__(
         self, 
-        root_agnostic_configuration,
+        root_configuration,
         resolver_conf,
         mount_filename,
         unmount_filename,
@@ -335,7 +335,7 @@ class AgnosticConfiguration(
         ssl_configuration
     ):
 
-        self._root_agnostic_configuration	= root_agnostic_configuration
+        self._root_configuration	= root_configuration
 
         self._resolver_conf			= resolver_conf
 
@@ -391,7 +391,7 @@ class AgnosticConfiguration(
                      filter( 
                          None, 
                          event.pathname[  
-                             len( self._root_agnostic_configuration.rstrip( os.sep ) + os.sep ):
+                             len( self._root_configuration.rstrip( os.sep ) + os.sep ):
                          ].split( os.sep )
                      )
 
@@ -448,7 +448,7 @@ class AgnosticConfiguration(
         self._notifier.coalesce_events()
 
         wm.add_watch( 
-            self._root_agnostic_configuration, 
+            self._root_configuration,
             mask, 
             rec=True,
             auto_add=True
@@ -493,21 +493,21 @@ class AgnosticConfiguration(
         for server in [ 
                        s 
                        for s 
-                       in os.listdir( self._root_agnostic_configuration )
-                       if os.path.isdir( self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + s )
+                       in os.listdir( self._root_configuration )
+                       if os.path.isdir( self._root_configuration.rstrip( os.sep ) + os.sep + s )
                       ]:
 
             # Si le nom ne correspond pas a un nom resolvable
             # la configuration n'est pas prise en compte
 	    if not self._resolver.query( server, 'A' ) and not self._resolver.query( server, 'AAAA' ):
-                l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_agnostic_configuration, server, ) )
+                l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_configuration, server, ) )
                 continue
 
             # Si le repertoire ne contient pas de configuration
             # de port, la configuration n'est pas prise en compte
             try:
-                if not os.listdir( self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + server ):
-                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_agnostic_configuration, server, ) )
+                if not os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server ):
+                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_configuration, server, ) )
                     continue
             except:
                     # En cas de suppression de la racine
@@ -521,7 +521,7 @@ class AgnosticConfiguration(
             for port in [ 
                          p
                          for p
-                         in os.listdir( self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + server )
+                         in os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server )
                       ]:
 
                 # Si le repertoire ne correspond pas au format d'un nom de port
@@ -530,7 +530,7 @@ class AgnosticConfiguration(
                     if not( re.match( '\d{1,5}', port ) and int( p ) <= 65535 ):
                         raise Exception()
                 except:
-                        l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_agnostic_configuration, server, port ) )
+                        l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_configuration, server, port ) )
                         continue
 
                 # Si aucun fichier de mapping
@@ -538,19 +538,19 @@ class AgnosticConfiguration(
                 # pas prise en compte
 
                 mount_filepath 		= 						\
-                    self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + 	\
+                    self._root_configuration.rstrip( os.sep ) + os.sep + 		\
                     server + os.sep + 							\
                     port + os.sep + 							\
                     self._mount_filename
 
                 unmount_filepath	= 						\
-                    self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + 	\
+                    self._root_configuration.rstrip( os.sep ) + os.sep + 		\
                     server + os.sep + 							\
                     port + os.sep + 							\
                     self._unmount_filename
 
                 redirect_filepath	= 						\
-                    self._root_agnostic_configuration.rstrip( os.sep ) + os.sep + 	\
+                    self._root_configuration.rstrip( os.sep ) + os.sep + 		\
                     server + os.sep + 							\
                     port + os.sep + 							\
                     self._redirect_filename
@@ -575,7 +575,7 @@ class AgnosticConfiguration(
                                     l_bad_configurations.append( 
                                         ( 
                                             'invalid format %s' % ( line ), 
-                                            self._root_agnostic_configuration, 
+                                            self._root_configuration,
                                             server, 
                                             port, 
                                             mapping_type 
@@ -617,7 +617,7 @@ class AgnosticConfiguration(
                                        self._unmount_filename, 
                                        self._redirect_filename 
                                    ), 
-                               self._root_agnostic_configuration, 
+                               self._root_configuration,
                                server, 
                                port 
                            ) 
@@ -650,7 +650,7 @@ class AgnosticConfiguration(
                 )
 
         if len( d_configurations ) == 0:
-            l_bad_configurations.append( ( 'no configuration available', self._root_agnostic_configuration, ) )
+            l_bad_configurations.append( ( 'no configuration available', self._root_configuration, ) )
 
         if  													\
                  reload_without_version_control 								\
@@ -707,7 +707,7 @@ class AgnosticConfiguration(
     ):
         return map( 
             lambda ( server, port, mapping_type ): 			\
-                self._root_agnostic_configuration.rstrip( os.sep ) + os.sep +	
+                self._root_configuration.rstrip( os.sep ) + os.sep +
                 server + os.sep +				
                 port + os.sep +					
                 mapping_type,

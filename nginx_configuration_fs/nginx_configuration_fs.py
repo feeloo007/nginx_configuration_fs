@@ -583,16 +583,16 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         }
 
         l_bad_id = [ 
-            self._agnostic_configuration._root_agnostic_configuration,
-            self._url2app_configuration._root_url2app_configuration,
+            self._agnostic_configuration._root_configuration,
+            self._url2app_configuration._root_configuration,
             self._ssl_configuration._root_ssl_configuration,
             'FS', 
         ]
 
         d_bad = {
-           self._agnostic_configuration._root_agnostic_configuration:
+           self._agnostic_configuration._root_configuration:
                self._agnostic_configuration.l_bad_configurations,
-           self._url2app_configuration._root_url2app_configuration:
+           self._url2app_configuration._root_configuration:
                self._url2app_configuration.l_bad_configurations,
            self._ssl_configuration._root_ssl_configuration:
                self._ssl_configuration.l_bad_configurations,
