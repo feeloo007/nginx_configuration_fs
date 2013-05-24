@@ -697,7 +697,7 @@ class AgnosticConfiguration(
 
 
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def filter_agnostic_id_configurations( 
+    def filter_id_configurations( 
         self, 
         pattern_server 		= '.*', 
         pattern_port 		= '.*', 
@@ -713,7 +713,7 @@ class AgnosticConfiguration(
 
     
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def get_list_agnostic_configurations_filenames( 
+    def get_list_configurations_filenames( 
         self, 
         pattern_server 		= '.*', 
         pattern_port 		= '.*', 
@@ -725,7 +725,7 @@ class AgnosticConfiguration(
                 server + os.sep +				
                 port + os.sep +					
                 mapping_type,
-            self.filter_agnostic_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+            self.filter_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
         )
 
     
@@ -741,7 +741,7 @@ class AgnosticConfiguration(
         return max( 
             map( 
                 lambda filename: fct( filename ) if os.path.isfile( filename ) else 0,
-                self.get_list_agnostic_configurations_filenames( 
+                self.get_list_configurations_filenames( 
                     pattern_server, 
                     pattern_port, 
                     pattern_mapping_type

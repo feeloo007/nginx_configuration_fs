@@ -408,7 +408,7 @@ class URL2AppConfiguration(
 
 
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def filter_agnostic_id_configurations( 
+    def filter_id_configurations( 
         self, 
         pattern_server 		= '.*', 
         pattern_port 		= '.*', 
@@ -424,7 +424,7 @@ class URL2AppConfiguration(
 
     
     @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def get_list_url2app_configurations_filenames( 
+    def get_list_configurations_filenames( 
         self, 
         pattern_server 		= '.*', 
         pattern_port 		= '.*', 
@@ -436,7 +436,7 @@ class URL2AppConfiguration(
                 server + os.sep +				
                 port + os.sep +					
                 mapping_type,
-            self.filter_agnostic_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+            self.filter_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
         )
     
 
