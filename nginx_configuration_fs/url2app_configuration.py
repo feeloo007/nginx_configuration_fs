@@ -409,20 +409,53 @@ class URL2AppConfiguration(
         )
 
     
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def get_list_configurations_filenames( 
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-        return map( 
-            lambda ( server, port, mapping_type ): 			\
-                self._root_configuration.rstrip( os.sep ) + os.sep +
-                server + os.sep +				
-                port + os.sep +					
-                mapping_type,
-            self.filter_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+    get_list_configurations_filenames   =                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2app_configuration
+        )(
+            shared_infrastructure.get_list_configurations_filenames
+        )
+
+
+    get_last_time       =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2app_configuration
+        )(
+            shared_infrastructure.get_last_time
+        )
+
+
+    get_last_atime      =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2app_configuration
+        )(
+            shared_infrastructure.get_last_atime
+        )
+
+
+    get_last_ctime      =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2app_configuration
+        )(
+            shared_infrastructure.get_last_ctime
+        )
+
+
+    get_last_mtime      =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2app_configuration
+        )(
+            shared_infrastructure.get_last_mtime
         )
     
 

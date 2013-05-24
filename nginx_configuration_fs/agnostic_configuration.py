@@ -688,100 +688,64 @@ class AgnosticConfiguration(
     id_configurations   = property( get_id_configurations, None, None )
 
 
-    filter_id_configurations    =                               \
+    filter_id_configurations    =                               		\
         volatile.cache(
             shared_infrastructure.cache_key,
-            lambda *args:                                       \
+            lambda *args:                                       		\
                 shared_infrastructure.cache_container_url2app_configuration
         )(
             shared_infrastructure.filter_id_configurations
         )
 
     
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def get_list_configurations_filenames( 
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-        return map( 
-            lambda ( server, port, mapping_type ): 			\
-                self._root_configuration.rstrip( os.sep ) + os.sep +
-                server + os.sep +				
-                port + os.sep +					
-                mapping_type,
-            self.filter_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+    get_list_configurations_filenames	=					\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 							\
+                shared_infrastructure.cache_container_agnostic_configuration
+        )(
+            shared_infrastructure.get_list_configurations_filenames
         )
 
     
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def get_last_time(
-        self, 
-        fct,
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-
-        return max( 
-            map( 
-                lambda filename: fct( filename ) if os.path.isfile( filename ) else 0,
-                self.get_list_configurations_filenames( 
-                    pattern_server, 
-                    pattern_port, 
-                    pattern_mapping_type
-                ) 
-            ) or [ 0 ]
+    get_last_time	=							\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 							\
+                shared_infrastructure.cache_container_agnostic_configuration
+        )(
+            shared_infrastructure.get_last_time
         )
-        return
 
 
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def get_last_atime(
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-
-        return self.get_last_time( 
-            os.path.getatime, 
-            pattern_server, 
-            pattern_port, 
-            pattern_mapping_type 
-        ) 
+    get_last_atime	=							\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 							\
+                shared_infrastructure.cache_container_agnostic_configuration
+        )(
+            shared_infrastructure.get_last_atime
+        )
     
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def get_last_ctime(
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ): 
 
-        return self.get_last_time( 
-            os.path.getctime, 
-            pattern_server, 
-            pattern_port, 
-            pattern_mapping_type 
-        ) 
+    get_last_ctime	=							\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 							\
+                shared_infrastructure.cache_container_agnostic_configuration
+        )(
+            shared_infrastructure.get_last_ctime
+        )
 
 
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_agnostic_configuration )
-    def get_last_mtime(
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ): 
-
-        return self.get_last_time(
-            os.path.getmtime,
-            pattern_server,
-            pattern_port,
-            pattern_mapping_type
-        ) 
+    get_last_mtime	=							\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 							\
+                shared_infrastructure.cache_container_agnostic_configuration
+        )(
+            shared_infrastructure.get_last_mtime
+        )
  
 
     _get_version_configurations =                                       \

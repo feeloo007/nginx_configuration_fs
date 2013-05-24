@@ -734,3 +734,92 @@ def filter_id_configurations(
             re.match( pattern_mapping_type, mapping_type ),
         self.id_configurations
     )
+
+######################################################
+# Functinn generique permettant
+# d'obtenir la liste des fichiers correpsondants
+# a un motif de rechercher
+# De meme pour les attributs horaires des fichiers
+#######################################################
+
+def get_list_configurations_filenames(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+    return map(
+        lambda ( server, port, mapping_type ):                      \
+            self._root_configuration.rstrip( os.sep ) + os.sep +
+            server + os.sep +
+            port + os.sep +
+            mapping_type,
+        self.filter_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+    )
+
+
+def get_last_time(
+    self,
+    fct,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return max(
+        map(
+            lambda filename: fct( filename ) if os.path.isfile( filename ) else 0,
+            self.get_list_configurations_filenames(
+                pattern_server,
+                pattern_port,
+                pattern_mapping_type
+            )
+        ) or [ 0 ]
+    )
+    return
+
+
+def get_last_atime(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return self.get_last_time(
+        os.path.getatime,
+        pattern_server,
+        pattern_port,
+        pattern_mapping_type
+    )
+
+
+def get_last_ctime(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return self.get_last_time(
+        os.path.getctime,
+        pattern_server,
+        pattern_port,
+        pattern_mapping_type
+    )
+
+
+
+def get_last_mtime(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return self.get_last_time(
+        os.path.getmtime,
+        pattern_server,
+        pattern_port,
+        pattern_mapping_type
+    )
