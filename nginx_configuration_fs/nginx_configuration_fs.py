@@ -110,11 +110,11 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             )
 
         # Gestion des interactions cross mapping
-        # Les tableaux agnostic vers virtuel permettent de calculer
-        # les dependances engendrer par les modificatinos dans agnostic
-        self._d_id_server_agnostic_2_virtual		= {}
-        self._d_id_port_agnostic_2_virtual		= {}
-        self._d_id_mapping_type_agnostic_2_virtual	= {
+        # Les tableaux configuration vers virtuel permettent de calculer
+        # les dependances engendrer par les modificatinos dans les configurations
+        self._d_id_server_configuration_2_virtual	= {}
+        self._d_id_port_configuration_2_virtual		= {}
+        self._d_id_mapping_type_configuration_2_virtual	= {
             self._mount_filename:    [
                 self._mount_filename,
                 self._redirect_filename
@@ -129,7 +129,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             ],
         }
 
-        # la gestion cross mapping dnas le sens virtuel a agnostic
+        # la gestion cross mapping dnas le sens virtuel a configuration
         # est plus compliquee
         # Au premier niveau, elle est contextualisee
         # NGINXConfigurationFS.__ATTR_CTX__ pour le cross mapping
@@ -138,7 +138,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         # concernant la lecture (read)
         # Elle est ensuite categorisee par id (server, port, mapping_ype).
         # Puis les cross mappings eux-memes sont exprimes
-        self._d_id_virtual_2_agnostic				= {
+        self._d_id_virtual_2_configuration			= {
             NGINXConfigurationFS.__ATTR_CTX__:			\
 	        {
                      NGINXConfigurationFS.__ID_SERVER__:	\
@@ -357,17 +357,17 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                          map(
                                              lambda mapping_type:
                                                  [ server, port, mapping_type ],
-                                                 self._d_id_mapping_type_agnostic_2_virtual.get(
+                                                 self._d_id_mapping_type_configuration_2_virtual.get(
                                                      id_configuration[ 2 ],
                                                      [ id_configuration[ 2 ] ]
                                                  )
                                          ),
-                                         self._d_id_port_agnostic_2_virtual.get(
+                                         self._d_id_port_configuration_2_virtual.get(
                                              id_configuration[ 1 ],
                                              [ id_configuration[ 1 ] ]
                                          )
                                  ),
-                            self._d_id_server_agnostic_2_virtual.get(
+                            self._d_id_server_configuration_2_virtual.get(
                                  id_configuration[ 0 ],
                                  [ id_configuration[ 0 ] ]
                             )
@@ -409,7 +409,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
            path_elements est une liste d'elements composants le nom du fichier
            with_resolved_cross_mapping permet de specifier qu'on recherche
            le fichier correspondant uniquement aux criteres du path_elements
-           ou qu'on applique les maping provenant des tableaux *virtual_2_agnostic_attrctx
+           ou qu'on applique les maping provenant des tableaux *virtual_2_configuration_attrctx
         """
         if 	len( path_elements ) == 0:
             return ( '.*', '.*', '.*' )
@@ -427,13 +427,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
                 return ( 
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
                             m_id.group( 'server' ),
                             [ m_id.group( 'server' ) ]
                         )
                     ),
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
                             m_id.group( 'port' ),
                             [ m_id.group( 'port' ) ]
                         )
@@ -450,19 +450,19 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
                 return (
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
                             m_id.group( 'server' ),
                             [ m_id.group( 'server' ) ]
                         )
                     ),
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
                             m_id.group( 'port' ),
                             [ m_id.group( 'port' ) ]
                         )
                     ),
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_MAPPING_TYPE__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_MAPPING_TYPE__ ].get(
                             m_id.group( 'mapping_type' ),
                             [ m_id.group( 'mapping_type' ) ]
                         )
