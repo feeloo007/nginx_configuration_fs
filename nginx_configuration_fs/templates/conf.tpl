@@ -48,23 +48,62 @@ server {
     error_page                  504     =503       /__BACKEND_FAILED__.html;
     error_page                  418     =503       /__NO_RESOLUTION_FOR_BACKEND__.html;
 
-    root /usr/share/nginx/html/;
+    root /home/z00_www_static/;
 
     location / {
 
-        root /usr/share/nginx/html/;
+        root /home/z00_www_static/;
 
         location = /__BACKEND_FAILED__.html {
             internal;
+
+            try_files 	/{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
+                        /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                        /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/$host/$uri
+                        /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri
+                        =404;
+
         }
 
         location = /__NO_CONFIGURATION__.html {
             internal;
+
+            try_files   /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
+                        /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                        /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/$host/$uri
+                        /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri
+                        =404;
+
         }
 
         location = /__NO_RESOLUTION_FOR_BACKEND__.html {
             internal;
             ssi on;
+
+            try_files   /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
+                        /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                        /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/$host/$uri
+                        /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                        /{{server}}/{{port}}/__default__/$host/$uri
+                        /{{server}}/{{port}}/__default__/__default__/$uri
+                        /{{server}}/__default__/__default__/$host/$uri
+                        /{{server}}/__default__/__default__/__default__/$uri
+                        /__default__/__default__/__default__/$host/$uri
+                        /__default__/__default__/__default__/__default__/$uri
+                        =404;
+
         }
 
     {% if converted_unmount_map_filename in list_converted_map_filenames %}
@@ -87,7 +126,17 @@ server {
 
         # Construction permettant d'utiliser location @backend et de servir les pages d'erreurs
         # Si $uri = egal une page d'erreur, c'est la page d'erreur qui est servie
-        try_files               $uri 	@backend;
+        try_files               /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
+                                /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                                /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/$host/$uri
+                                /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/__default__/$uri
+                                /{{server}}/{{port}}/__default__/$host/$uri
+                                /{{server}}/{{port}}/__default__/__default__/$uri
+                                /{{server}}/__default__/__default__/$host/$uri
+                                /{{server}}/__default__/__default__/__default__/$uri
+                                /__default__/__default__/__default__/$host/$uri
+                                /__default__/__default__/__default__/__default__/$uri
+                                @backend;
 
 
     {% else %}
@@ -160,4 +209,11 @@ include {{ root_nginx_configuration }}{{ converted_mount_map_filename }};
 include {{ root_nginx_configuration }}{{ converted_url2entity_map_filename }};
 {% else -%}
 # Pas de map url2entity pour ce serveur
+# Creation d'une map par defaut
+map $scheme://$host:$server_port$uri $url_2_entity_{{ suffix_map }} {
+
+    default     "__default__";
+
+}
+
 {% endif -%}
