@@ -11,6 +11,6 @@
     "root_ssl_configuration"		: "/etc/mdp/ssl.d/",
     "ssl_certificate_filename"		: "cert.pem",
     "ssl_certificate_key_filename"	: "cert.key",
-    "root_url2app_configuration"	: "/etc/mdp/app.d/",
-    "url2app_filename"			: "url2app"
+    "root_url2entity_configuration"	: "/etc/mdp/entity.d/",
+    "url2entity_filename"		: "url2entity"
 }

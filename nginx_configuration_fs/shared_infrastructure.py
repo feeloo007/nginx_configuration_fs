@@ -51,7 +51,7 @@ def cache_key( fun, instance, *args ):
 
 cache_container_agnostic_configuration          = {}
 cache_container_ssl_configuration          	= {}
-cache_container_url2app_configuration          	= {}
+cache_container_url2entity_configuration          	= {}
 cache_container_nginx_fs                        = {}
 
 

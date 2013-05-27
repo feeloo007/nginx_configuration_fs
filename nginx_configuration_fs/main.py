@@ -22,12 +22,12 @@ import	agnostic_configuration
 
 import	ssl_configuration
 
-import	url2app_configuration
+import	url2entity_configuration
 
 __NGINX_CONFIGURATION_FS_CONFIG_TEMPLATE__ 	= 'nginx_configuration_fs.config.template'
 __ROOT_AGNOSTIC_CONFIGURATION__			= 'root_agnostic_configuration'
 __ROOT_SSL_CONFIGURATION__			= 'root_ssl_configuration'
-__ROOT_URL2APP_CONFIGURATION__			= 'root_url2app_configuration'
+__ROOT_URL2ENTITY_CONFIGURATION__		= 'root_url2entity_configuration'
 __USER_OWNER__					= 'user_owner'
 __GROUP_OWNER__					= 'group_owner'
 __RESOLVER_CONF__				= 'resolver_conf'
@@ -38,7 +38,7 @@ __ERROR_STATUS_FILENAME__			= 'error_status_filename'
 __RESTART_NGINX__				= 'restart_nginx'
 __SSL_CERTIFICATE_FILENAME__			= 'ssl_certificate_filename'
 __SSL_CERTIFICATE_KEY_FILENAME__		= 'ssl_certificate_key_filename'
-__URL2APP_FILENAME__				= 'url2app_filename'
+__URL2ENTITY_FILENAME__				= 'url2entity_filename'
 
 @plac.annotations(
     configuration_path	= 						\
@@ -154,12 +154,12 @@ def main_verify(
         print( '%s not found in %s' % ( __SSL_CERTIFICATE_KEY_FILENAME__, configuration_path )  )
         sys.exit(18)
 
-    if not d_config.has_key( __ROOT_URL2APP_CONFIGURATION__ ) :
-        print( '%s not found in %s' % ( __ROOT_URL2APP_CONFIGURATION__, configuration_path )  )
+    if not d_config.has_key( __ROOT_URL2ENTITY_CONFIGURATION__ ) :
+        print( '%s not found in %s' % ( __ROOT_URL2ENTITY_CONFIGURATION__, configuration_path )  )
         sys.exit(19)
 
-    if not d_config.has_key( __URL2APP_FILENAME__ ) :
-        print( '%s not found in %s' % ( __URL2APP_FILENAME__, configuration_path )  )
+    if not d_config.has_key( __URL2ENTITY_FILENAME__ ) :
+        print( '%s not found in %s' % ( __URL2ENTITY_FILENAME__, configuration_path )  )
         sys.exit(20)
 
     return 							\
@@ -214,14 +214,14 @@ def main_process(
                 d_config[ __ERROR_STATUS_FILENAME__ ],
                 d_config[ __RESTART_NGINX__ ],
                 ssl_conf,
-                url2app_configuration.URL2AppConfiguration(
-                    d_config[ __ROOT_URL2APP_CONFIGURATION__ ],
+                url2entity_configuration.URL2EntityConfiguration(
+                    d_config[ __ROOT_URL2ENTITY_CONFIGURATION__ ],
                     d_config[ __RESOLVER_CONF__ ],
-                    d_config[ __URL2APP_FILENAME__ ],
+                    d_config[ __URL2ENTITY_FILENAME__ ],
                     d_config[ __RESTART_NGINX__ ],
                     ssl_conf
                 ),
-                d_config[ __URL2APP_FILENAME__ ],
+                d_config[ __URL2ENTITY_FILENAME__ ],
             ),
             mountpoint,
             named_mount_options,

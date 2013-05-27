@@ -30,7 +30,7 @@ import  hashlib
 
 import	shared_infrastructure
 
-class URL2AppConfiguration(
+class URL2EntityConfiguration(
     shared_infrastructure.IAddToConfigurationWithMappingType
     ):
 
@@ -38,7 +38,7 @@ class URL2AppConfiguration(
 
     _comment_pattern			= 	'''^\s*(?P<comment>#+)'''
 
-    _url2app_pattern			= 	\
+    _url2entity_pattern			= 	\
         '''^\s*%s\s*(?P<appcode>[A-Z][0-9]{2})\s*(?P<env>[0-9A-Z]{2})\s*(?P<aera>[DV][0-9A-F])\s*(?P<virtual_ngv_num>[0-9]{2})\s*''' % (
             rfc3987.format_patterns(
                 URI		= 'URI', 
@@ -46,7 +46,7 @@ class URL2AppConfiguration(
     )
 
     @staticmethod
-    def process_uri_for_url2app(
+    def process_uri_for_url2entity(
         self,
         d,
         filepath,
@@ -81,7 +81,7 @@ class URL2AppConfiguration(
             '',
         )
 
-        URL2AppConfiguration.add_to_configuration( 
+        URL2EntityConfiguration.add_to_configuration( 
             d, 
             lambda d: {
                         'uri'			: d[ 'URI' ],
@@ -103,7 +103,7 @@ class URL2AppConfiguration(
         self, 
         root_configuration,
         resolver_conf,
-        url2app_filename,
+        url2entity_filename,
         restart_nginx,
         ssl_configuration
     ):
@@ -112,11 +112,11 @@ class URL2AppConfiguration(
 
         self._resolver_conf			= resolver_conf
 
-        self._url2app_filename			= url2app_filename
+        self._url2entity_filename			= url2entity_filename
 
         self._d_l_process_uri			= 				\
             {
-                self._url2app_filename		: URL2AppConfiguration.process_uri_for_url2app,
+                self._url2entity_filename		: URL2EntityConfiguration.process_uri_for_url2entity,
             }
 
         self._restart_nginx			= restart_nginx
@@ -151,7 +151,7 @@ class URL2AppConfiguration(
     
                           self._l_bad_configurations.append( ( '%s error' % ( self._restart_nginx ), ) )
     
-                          shared_infrastructure.cache_container_url2app_configuration.clear()
+                          shared_infrastructure.cache_container_url2entity_configuration.clear()
                           shared_infrastructure.cache_container_nginx_fs.clear()
 
                  path_elements = \
@@ -184,7 +184,7 @@ class URL2AppConfiguration(
 		     return None
 
                  if re.match( 
-                     self._url2app_filename, 
+                     self._url2entity_filename, 
                      path_elements[ 2 ]
                  ): 
 
@@ -302,11 +302,11 @@ class URL2AppConfiguration(
                 # n'est present, la configuration n'est
                 # pas prise en compte
 
-                url2app_filepath 		= 					\
+                url2entity_filepath 		= 					\
                     self._root_configuration.rstrip( os.sep ) + os.sep + 		\
                     server + os.sep + 							\
                     port + os.sep + 							\
-                    self._url2app_filename
+                    self._url2entity_filename
 
 
                 def add_to_configuration(
@@ -320,7 +320,7 @@ class URL2AppConfiguration(
                         ) as f:
         
                             for line in [ l.rstrip() for l in f.readlines() ]:
-                                if re.match( URL2AppConfiguration._comment_pattern, line ):
+                                if re.match( URL2EntityConfiguration._comment_pattern, line ):
                                     continue
         
                                 m = re.match( pattern, line )
@@ -358,9 +358,9 @@ class URL2AppConfiguration(
                         pass
 
                 add_to_configuration( 
-                    self._url2app_filename, 	
-                    url2app_filepath, 	
-                    URL2AppConfiguration._url2app_pattern, 		
+                    self._url2entity_filename, 	
+                    url2entity_filepath, 	
+                    URL2EntityConfiguration._url2entity_pattern, 		
                 )
 
 
@@ -376,7 +376,7 @@ class URL2AppConfiguration(
 
             self._d_configurations         =       d_configurations
             self._l_bad_configurations     =       l_bad_configurations
-            shared_infrastructure.cache_container_url2app_configuration.clear()
+            shared_infrastructure.cache_container_url2entity_configuration.clear()
             shared_infrastructure.cache_container_nginx_fs.clear()
 
             return True
@@ -391,7 +391,7 @@ class URL2AppConfiguration(
             volatile.cache(
                 shared_infrastructure.cache_key,
                 lambda *args: 					\
-                    shared_infrastructure.cache_container_url2app_configuration
+                    shared_infrastructure.cache_container_url2entity_configuration
             )(
                 shared_infrastructure.get_id_configurations
             )
@@ -403,7 +403,7 @@ class URL2AppConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args: 					\
-                shared_infrastructure.cache_container_url2app_configuration
+                shared_infrastructure.cache_container_url2entity_configuration
         )(
             shared_infrastructure.filter_id_configurations
         )
@@ -413,7 +413,7 @@ class URL2AppConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args:                                                       \
-                shared_infrastructure.cache_container_url2app_configuration
+                shared_infrastructure.cache_container_url2entity_configuration
         )(
             shared_infrastructure.get_list_configurations_filenames
         )
@@ -423,7 +423,7 @@ class URL2AppConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args:                                                       \
-                shared_infrastructure.cache_container_url2app_configuration
+                shared_infrastructure.cache_container_url2entity_configuration
         )(
             shared_infrastructure.get_last_time
         )
@@ -433,7 +433,7 @@ class URL2AppConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args:                                                       \
-                shared_infrastructure.cache_container_url2app_configuration
+                shared_infrastructure.cache_container_url2entity_configuration
         )(
             shared_infrastructure.get_last_atime
         )
@@ -443,7 +443,7 @@ class URL2AppConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args:                                                       \
-                shared_infrastructure.cache_container_url2app_configuration
+                shared_infrastructure.cache_container_url2entity_configuration
         )(
             shared_infrastructure.get_last_ctime
         )
@@ -453,7 +453,7 @@ class URL2AppConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args:                                                       \
-                shared_infrastructure.cache_container_url2app_configuration
+                shared_infrastructure.cache_container_url2entity_configuration
         )(
             shared_infrastructure.get_last_mtime
         )

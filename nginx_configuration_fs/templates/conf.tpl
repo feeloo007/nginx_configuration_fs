@@ -156,8 +156,8 @@ include {{ root_nginx_configuration }}{{ converted_mount_map_filename }};
 # Pas de map mount pour ce serveur
 {% endif -%}
 
-{% if converted_url2app_map_filename in list_converted_map_filenames -%}
-include {{ root_nginx_configuration }}{{ converted_url2app_map_filename }};
+{% if converted_url2entity_map_filename in list_converted_map_filenames -%}
+include {{ root_nginx_configuration }}{{ converted_url2entity_map_filename }};
 {% else -%}
-# Pas de map url2app pour ce serveur
+# Pas de map url2entity pour ce serveur
 {% endif -%}
