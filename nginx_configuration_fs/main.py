@@ -98,6 +98,14 @@ def main_verify(
     with closing( open( configuration_path ) ) as f_configuration:
         d_config = json.load( f_configuration )
 
+    if not d_config.has_key( __ROOT_AGNOSTIC_CONFIGURATION__ ) :
+        print( '%s not found in %s' % ( __ROOT_AGNOSTIC_CONFIGURATION__, __NGINX_CONFIGURATION_FS__ ) ) 
+        sys.exit(3)
+
+    if not os.path.isdir( d_config[ __ROOT_AGNOSTIC_CONFIGURATION__ ] ):
+        print( '%s is not a directory' % ( d_config[ __ROOT_AGNOSTIC_CONFIGURATION__ ] ) )
+        sys.exit(4)
+
     if not d_config.has_key( __USER_OWNER__ ) :
         print( '%s not found in %s' % ( __USER_OWNER__, configuration_path )  )
         sys.exit(6)
@@ -146,6 +154,10 @@ def main_verify(
         print( '%s not found in %s' % ( __ROOT_SSL_CONFIGURATION__, configuration_path )  )
         sys.exit(16)
 
+    if not os.path.isdir( d_config[ __ROOT_SSL_CONFIGURATION__ ] ):
+        print( '%s is not a directory' % ( d_config[ __ROOT_SSL_CONFIGURATION__ ] ) )
+        sys.exit(21)
+
     if not d_config.has_key( __SSL_CERTIFICATE_FILENAME__ ) :
         print( '%s not found in %s' % ( __SSL_CERTIFICATE_FILENAME__, configuration_path )  )
         sys.exit(17)
@@ -157,6 +169,10 @@ def main_verify(
     if not d_config.has_key( __ROOT_URL2ENTITY_CONFIGURATION__ ) :
         print( '%s not found in %s' % ( __ROOT_URL2ENTITY_CONFIGURATION__, configuration_path )  )
         sys.exit(19)
+
+    if not os.path.isdir( d_config[ __ROOT_URL2ENTITY_CONFIGURATION__ ] ):
+        print( '%s is not a directory' % ( d_config[ __ROOT_URL2ENTITY_CONFIGURATION__ ] ) )
+        sys.exit(21)
 
     if not d_config.has_key( __URL2ENTITY_FILENAME__ ) :
         print( '%s not found in %s' % ( __URL2ENTITY_FILENAME__, configuration_path )  )
