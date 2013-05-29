@@ -26,37 +26,27 @@ import 	pyinotify
 
 import  subprocess
 
-import 	hashlib
-
-import	json
+import  hashlib
 
 import	shared_infrastructure
 
-class URL2AppConfiguration():
+class URL2EntityConfiguration(
+    shared_infrastructure.IAddToConfigurationWithMappingType
+    ):
 
     _configurations_lock           	=       threading.RLock()
 
     _comment_pattern			= 	'''^\s*(?P<comment>#+)'''
 
-    @staticmethod
-    def add_to_configuration( 
-        d, 
-        le_mapping,
-        d_configurations,
-        current_server, 
-        current_port, 
-    ):
-        pass
-
-    _url2app_pattern			= 	\
-        '''^\s*%s\s+''' % (
+    _url2entity_pattern			= 	\
+        '''^\s*%s\s*(?P<appcode>[A-Z][0-9]{2})\s*(?P<env>[0-9A-Z]{2})\s*(?P<aera>[DV][0-9A-F])\s*(?P<virtual_ngv_num>[0-9]{2})\s*''' % (
             rfc3987.format_patterns(
                 URI		= 'URI', 
             )['URI'],
     )
 
     @staticmethod
-    def process_uri_for_url2app(
+    def process_uri_for_url2entity(
         self,
         d,
         filepath,
@@ -68,18 +58,19 @@ class URL2AppConfiguration():
         l_bad_configurations,
     ):
         shared_infrastructure.common_process_uri( 
-            lambda: self._root_url2app_configuration,  
+            lambda: self._root_configuration,
             d, 
             line, 
             server, 
             port,
             mapping_type, 
             l_bad_configurations, 
+            '',
         )
 
 
         shared_infrastructure.listen_ssl_process_uri( 
-            lambda: self._root_url2app_configuration,  
+            lambda: self._root_configuration,
             lambda: self._ssl_configuration,
             d, 
             line, 
@@ -87,39 +78,45 @@ class URL2AppConfiguration():
             port, 
             mapping_type,
             l_bad_configurations, 
+            '',
         )
 
-        URL2AppConfiguration.add_to_configuration( 
+        URL2EntityConfiguration.add_to_configuration( 
             d, 
             lambda d: {
-                        #'uri': d[ 'URI' ],
+                        'uri'			: d[ 'URI' ],
+                        'appcode'		: d[ 'appcode' ],
+                        'env'			: d[ 'env' ],
+                        'aera'			: d[ 'aera' ],
+                        'virtual_ngv_num'	: d[ 'virtual_ngv_num' ],
                     }, 
             d_configurations,
             filepath,
             server, 
             port, 
-            mapping_type, 
+            mapping_type,
+            le_sort     = lambda x: ( x[ 'uri' ] )
         )
 
 
     def __init__(
         self, 
-        root_url2app_configuration,
+        root_configuration,
         resolver_conf,
-        url2app_filename,
+        url2entity_filename,
         restart_nginx,
         ssl_configuration
     ):
 
-        self._root_url2app_configuration	= root_url2app_configuration
+        self._root_configuration	= root_configuration
 
         self._resolver_conf			= resolver_conf
 
-        self._url2app_filename			= url2app_filename
+        self._url2entity_filename			= url2entity_filename
 
         self._d_l_process_uri			= 				\
             {
-                self._url2app_filename		: URL2AppConfiguration.process_uri_for_url2app,
+                self._url2entity_filename		: URL2EntityConfiguration.process_uri_for_url2entity,
             }
 
         self._restart_nginx			= restart_nginx
@@ -154,14 +151,14 @@ class URL2AppConfiguration():
     
                           self._l_bad_configurations.append( ( '%s error' % ( self._restart_nginx ), ) )
     
-                          shared_infrastructure.cache_container_url2app_configuration.clear()
+                          shared_infrastructure.cache_container_url2entity_configuration.clear()
                           shared_infrastructure.cache_container_nginx_fs.clear()
 
                  path_elements = \
                      filter( 
                          None, 
                          event.pathname[  
-                             len( self._root_url2app_configuration.rstrip( os.sep ) + os.sep ):
+                             len( self._root_configuration.rstrip( os.sep ) + os.sep ):
                          ].split( os.sep )
                      )
 
@@ -187,11 +184,7 @@ class URL2AppConfiguration():
 		     return None
 
                  if re.match( 
-                     '^%s|%s|%s$' % ( 
-                         self._url2app_filename, 
-                         self._unurl2app_filename, 
-                         self._redirect_filename 
-                     ),
+                     self._url2entity_filename, 
                      path_elements[ 2 ]
                  ): 
 
@@ -218,7 +211,7 @@ class URL2AppConfiguration():
         self._notifier.coalesce_events()
 
         wm.add_watch( 
-            self._root_url2app_configuration, 
+            self._root_configuration,
             mask, 
             rec=True,
             auto_add=True
@@ -263,22 +256,22 @@ class URL2AppConfiguration():
         for server in [ 
                        s 
                        for s 
-                       in os.listdir( self._root_url2app_configuration )
-                       if os.path.isdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + s )
+                       in os.listdir( self._root_configuration )
+                       if os.path.isdir( self._root_configuration.rstrip( os.sep ) + os.sep + s )
                       ]:
 
             # Si le nom ne correspond pas a un nom resolvable
             # la configuration n'est pas prise en compte
             if not self._resolver.query( server, 'A' ) and not self._resolver.query( server, 'AAAA' ):
-                l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_url2app_configuration, server, ) )
+                l_bad_configurations.append( ( '%s not resolvable' % ( server ), self._root_configuration, server, ) )
                 continue
 
 
             try:
                 # Si le repertoire ne contient pas de configuration
                 # de port, la configuration n'est pas prise en compte
-                if not os.listdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + server ):
-                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_url2app_configuration, server, ) )
+                if not os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server ):
+                    l_bad_configurations.append( ( '%s no port definition' % ( server ), self._root_configuration, server, ) )
                     continue
             except:
                 # En cas de suppression de la racine
@@ -293,7 +286,7 @@ class URL2AppConfiguration():
             for port in [ 
                          p
                          for p
-                         in os.listdir( self._root_url2app_configuration.rstrip( os.sep ) + os.sep + server )
+                         in os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server )
                       ]:
 
                 # Si le repertoire ne correspond pas au format d'un nom de port
@@ -302,18 +295,18 @@ class URL2AppConfiguration():
                     if not( re.match( '\d{1,5}', port ) and int( p ) <= 65535 ):
                         raise Exception()
                 except:
-                        l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_url2app_configuration, server, port ) )
+                        l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_configuration, server, port ) )
                         continue
 
                 # Si aucun fichier de mapping
                 # n'est present, la configuration n'est
                 # pas prise en compte
 
-                url2app_filepath 		= 						\
-                    self._root_url2app_configuration.rstrip( os.sep ) + os.sep + 	\
+                url2entity_filepath 		= 					\
+                    self._root_configuration.rstrip( os.sep ) + os.sep + 		\
                     server + os.sep + 							\
                     port + os.sep + 							\
-                    self._url2app_filename
+                    self._url2entity_filename
 
 
                 def add_to_configuration(
@@ -327,7 +320,7 @@ class URL2AppConfiguration():
                         ) as f:
         
                             for line in [ l.rstrip() for l in f.readlines() ]:
-                                if re.match( URL2Appconfiguration._comment_pattern, line ):
+                                if re.match( URL2EntityConfiguration._comment_pattern, line ):
                                     continue
         
                                 m = re.match( pattern, line )
@@ -335,7 +328,7 @@ class URL2AppConfiguration():
                                     l_bad_configurations.append( 
                                         ( 
                                             'invalid format %s' % ( line ), 
-                                            self._root_url2app_configuration, 
+                                            self._root_configuration,
                                             server, 
                                             port, 
                                             mapping_type 
@@ -365,14 +358,14 @@ class URL2AppConfiguration():
                         pass
 
                 add_to_configuration( 
-                    self._url2app_filename, 	
-                    url2app_filepath, 	
-                    URL2AppConfiguration._url2app_pattern, 		
+                    self._url2entity_filename, 	
+                    url2entity_filepath, 	
+                    URL2EntityConfiguration._url2entity_pattern, 		
                 )
 
 
         if len( d_configurations ) == 0:
-            l_bad_configurations.append( ( 'no configuration available', self._root_url2app_configuration, ) )
+            l_bad_configurations.append( ( 'no configuration available', self._root_configuration, ) )
 
         if  													\
                  reload_without_version_control 								\
@@ -383,7 +376,7 @@ class URL2AppConfiguration():
 
             self._d_configurations         =       d_configurations
             self._l_bad_configurations     =       l_bad_configurations
-            shared_infrastructure.cache_container_url2app_configuration.clear()
+            shared_infrastructure.cache_container_url2entity_configuration.clear()
             shared_infrastructure.cache_container_nginx_fs.clear()
 
             return True
@@ -391,87 +384,97 @@ class URL2AppConfiguration():
         return False
 
 
-    @synchronized( _configurations_lock )
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def get_id_configurations( self ):
-
-        return reduce(
-            list.__add__,
-            map( 
-                lambda ( server, portsv ): reduce( 
-                    list.__add__, 
-                    map( 
-                       lambda ( port, mappings_typev ): map(
-                           lambda mapping_type: [ server, port, mapping_type ],
-                               mappings_typev.keys(),
-                           ),
-                           portsv.items()
-                    )
-                ), 
-                self.d_configurations.items()
-            ) if self.d_configurations.items() else [ [] ]
+    get_id_configurations	=				\
+        synchronized(
+            _configurations_lock
+        )(
+            volatile.cache(
+                shared_infrastructure.cache_key,
+                lambda *args: 					\
+                    shared_infrastructure.cache_container_url2entity_configuration
+            )(
+                shared_infrastructure.get_id_configurations
+            )
         )
     id_configurations 	= property( get_id_configurations, None, None )
 
 
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def filter_agnostic_id_configurations( 
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-        return filter(
-            lambda ( server, port, mapping_type ): \
-                re.match( pattern_server, server ) 	and \
-                re.match( pattern_port, port ) 		and \
-                re.match( pattern_mapping_type, mapping_type ),
-            self.id_configurations
+    filter_id_configurations	=				\
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args: 					\
+                shared_infrastructure.cache_container_url2entity_configuration
+        )(
+            shared_infrastructure.filter_id_configurations
         )
 
     
-    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_container_url2app_configuration )
-    def get_list_url2app_configurations_filenames( 
-        self, 
-        pattern_server 		= '.*', 
-        pattern_port 		= '.*', 
-        pattern_mapping_type 	= '.*' 
-    ):
-        return map( 
-            lambda ( server, port, mapping_type ): 			\
-                self._root_url2app_configuration.rstrip( os.sep ) + os.sep +	
-                server + os.sep +				
-                port + os.sep +					
-                mapping_type,
-            self.filter_agnostic_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+    get_list_configurations_filenames   =                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2entity_configuration
+        )(
+            shared_infrastructure.get_list_configurations_filenames
+        )
+
+
+    get_last_time       =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2entity_configuration
+        )(
+            shared_infrastructure.get_last_time
+        )
+
+
+    get_last_atime      =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2entity_configuration
+        )(
+            shared_infrastructure.get_last_atime
+        )
+
+
+    get_last_ctime      =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2entity_configuration
+        )(
+            shared_infrastructure.get_last_ctime
+        )
+
+
+    get_last_mtime      =                                                       \
+        volatile.cache(
+            shared_infrastructure.cache_key,
+            lambda *args:                                                       \
+                shared_infrastructure.cache_container_url2entity_configuration
+        )(
+            shared_infrastructure.get_last_mtime
         )
     
 
-    @synchronized( _configurations_lock )
-    def _get_version_configurations( self, d_configurations ):
-
-        return \
-            hashlib.sha1(
-                json.dumps(
-                    d_configurations,
-                    sort_keys   = True,
-                    cls         = shared_infrastructure.DictWithMaskableKeysEncoder,
-                )
-            ).hexdigest()
-
-
+    _get_version_configurations = 					\
+        synchronized(
+            _configurations_lock
+        )(
+            shared_infrastructure._get_version_configurations
+    )
     get_version_configurations	= _get_version_configurations
 
 
-    @synchronized( _configurations_lock )
-    def get_current_version_configurations( self ):
-
-        return	\
-            self._get_version_configurations(
-                self.d_configurations
-            )
-
-    current_version_configurations	=	\
+    get_current_version_configurations = 				\
+        synchronized(
+            _configurations_lock
+        )(
+            shared_infrastructure.get_current_version_configurations
+    )
+    current_version_configurations	=				\
         property(
             get_current_version_configurations,
             None,

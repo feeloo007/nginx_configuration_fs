@@ -13,6 +13,8 @@ import  rfc3987
 
 import	collections
 
+import 	hashlib
+
 import	json
 
 import 	os
@@ -49,7 +51,7 @@ def cache_key( fun, instance, *args ):
 
 cache_container_agnostic_configuration          = {}
 cache_container_ssl_configuration          	= {}
-cache_container_url2app_configuration          	= {}
+cache_container_url2entity_configuration          	= {}
 cache_container_nginx_fs                        = {}
 
 
@@ -618,3 +620,206 @@ def catch_NoNamesservers( f ):
             return []
 
     return wrapped
+
+
+#####################################
+# Interface pour add_to_configuration
+#####################################
+
+class IAddToConfigurationWithMappingType():
+
+    @staticmethod
+    def add_to_configuration(
+        d,
+        le_mapping,
+        d_configurations,
+        filepath,
+        current_server,
+        current_port,
+        current_mapping_type,
+        le_sort = lambda x: x,
+    ):
+        d_configurations[ current_server ][ current_port ][ current_mapping_type ][ 'mappings' ] = \
+            (
+                lambda l, e, le_sort = le_sort:
+                    [ x for x in l if le_sort( x ) >  le_sort( e ) ]    +
+                    [ e ]                                               +
+                    [ x for x in l if le_sort( x ) <= le_sort( e ) ]
+            )(
+                d_configurations.setdefault(
+                    current_server,
+                    {}
+                ).setdefault(
+                    current_port,
+                    {}
+                ).setdefault(
+                    current_mapping_type,
+                    DictWithMaskableKeys(
+                        {
+                            'times': {
+                                'ctime': '%s' % ( os.path.getctime( filepath ) ),
+                                'mtime': '%s' % ( os.path.getmtime( filepath ) ),
+                            },
+                            'mappings': []
+                        },
+                        [ 'times' ]
+                    )
+                )[ 'mappings' ],
+                le_mapping( d )
+            )
+
+
+###########################################
+# Function generique calculant la signature
+# d'une configuration manipulee par
+# IAddToConfigurationWithMappingType
+###########################################
+
+def _get_version_configurations( self, d_configurations ):
+
+    return \
+        hashlib.sha1(
+            json.dumps(
+                d_configurations,
+                sort_keys   = True,
+                cls         = DictWithMaskableKeysEncoder,
+            )
+        ).hexdigest()
+
+
+def get_current_version_configurations( self ):
+
+    return  \
+        self._get_version_configurations(
+            self.d_configurations
+        )
+
+
+######################################################
+# Functinn generique permettant l'acces
+# au i de configuration d'une structure d_configuration
+# alimentee pour une classe derivant de
+# IAddToConfigurationWithMappingType
+#######################################################
+
+def get_id_configurations( self ):
+
+    return reduce(
+        list.__add__,
+        map(
+            lambda ( server, portsv ): reduce(
+                list.__add__,
+                map(
+                   lambda ( port, mappings_typev ): map(
+                       lambda mapping_type: [ server, port, mapping_type ],
+                           mappings_typev.keys(),
+                       ),
+                       portsv.items()
+                )
+            ),
+            self.d_configurations.items()
+        ) if self.d_configurations.items() else [ [] ]
+    )
+
+def filter_id_configurations(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+    return filter(
+        lambda ( server, port, mapping_type ): \
+            re.match( pattern_server, server )      and \
+            re.match( pattern_port, port )          and \
+            re.match( pattern_mapping_type, mapping_type ),
+        self.id_configurations
+    )
+
+######################################################
+# Functinn generique permettant
+# d'obtenir la liste des fichiers correpsondants
+# a un motif de rechercher
+# De meme pour les attributs horaires des fichiers
+#######################################################
+
+def get_list_configurations_filenames(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+    return map(
+        lambda ( server, port, mapping_type ):                      \
+            self._root_configuration.rstrip( os.sep ) + os.sep +
+            server + os.sep +
+            port + os.sep +
+            mapping_type,
+        self.filter_id_configurations( pattern_server, pattern_port, pattern_mapping_type )
+    )
+
+
+def get_last_time(
+    self,
+    fct,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return max(
+        map(
+            lambda filename: fct( filename ) if os.path.isfile( filename ) else 0,
+            self.get_list_configurations_filenames(
+                pattern_server,
+                pattern_port,
+                pattern_mapping_type
+            )
+        ) or [ 0 ]
+    )
+    return
+
+
+def get_last_atime(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return self.get_last_time(
+        os.path.getatime,
+        pattern_server,
+        pattern_port,
+        pattern_mapping_type
+    )
+
+
+def get_last_ctime(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return self.get_last_time(
+        os.path.getctime,
+        pattern_server,
+        pattern_port,
+        pattern_mapping_type
+    )
+
+
+
+def get_last_mtime(
+    self,
+    pattern_server          = '.*',
+    pattern_port            = '.*',
+    pattern_mapping_type    = '.*'
+):
+
+    return self.get_last_time(
+        os.path.getmtime,
+        pattern_server,
+        pattern_port,
+        pattern_mapping_type
+    )

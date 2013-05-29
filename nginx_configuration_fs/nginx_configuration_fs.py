@@ -29,6 +29,8 @@ import	shared_infrastructure
 
 import	ssl_configuration
 
+import	url2entity_configuration
+
 class NGINXConfigurationFS(LoggingMixIn, Operations):
 
     __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__             = \
@@ -65,7 +67,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         error_status_filename,
         restart_nginx,
         ssl_configuration,
-        url2app_configuration,
+        url2entity_configuration,
+        url2entity_filename,
     ):
 
         self._agnostic_configuration	= agnostic_configuration
@@ -81,18 +84,27 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._error_status_filename	= error_status_filename
         self._restart_nginx		= restart_nginx
         self._ssl_configuration		= ssl_configuration
+        self._url2entity_configuration	= url2entity_configuration
+        self._url2entity_filename		= url2entity_filename
 
         self._l_bad_configurations	= []
+
+        self._l_configurations 	= 					\
+            (								\
+                self._agnostic_configuration,				\
+                self._url2entity_configuration,				\
+            )
 
         self._pattern_converted_conf_filenames	= \
            '^(?P<server>.*)-(?P<port>\d+)\.conf$'
 
         self._pattern_converted_map_filenames	= \
             '^(?P<mapping_type>' + \
-            '%s|%s|%s' % ( 
+            '%s|%s|%s|%s' % (
                 self._mount_filename, 
                 self._unmount_filename, 
                 self._redirect_filename, 
+                self._url2entity_filename,
             ) + ')-(?P<server>.*)-(?P<port>\d+)\.map$'
 
         # Getion des templates de read
@@ -107,11 +119,11 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             )
 
         # Gestion des interactions cross mapping
-        # Les tableaux agnostic vers virtuel permettent de calculer
-        # les dependances engendrer par les modificatinos dans agnostic
-        self._d_id_server_agnostic_2_virtual		= {}
-        self._d_id_port_agnostic_2_virtual		= {}
-        self._d_id_mapping_type_agnostic_2_virtual	= {
+        # Les tableaux configuration vers virtuel permettent de calculer
+        # les dependances engendrer par les modificatinos dans les configurations
+        self._d_id_server_configuration_2_virtual	= {}
+        self._d_id_port_configuration_2_virtual		= {}
+        self._d_id_mapping_type_configuration_2_virtual	= {
             self._mount_filename:    [
                 self._mount_filename,
                 self._redirect_filename
@@ -124,9 +136,12 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                 self._unmount_filename,
                 self._mount_filename
             ],
+            self._url2entity_filename: [
+                self._url2entity_filename,
+            ],
         }
 
-        # la gestion cross mapping dnas le sens virtuel a agnostic
+        # la gestion cross mapping dnas le sens virtuel a configuration
         # est plus compliquee
         # Au premier niveau, elle est contextualisee
         # NGINXConfigurationFS.__ATTR_CTX__ pour le cross mapping
@@ -135,7 +150,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         # concernant la lecture (read)
         # Elle est ensuite categorisee par id (server, port, mapping_ype).
         # Puis les cross mappings eux-memes sont exprimes
-        self._d_id_virtual_2_agnostic				= {
+        self._d_id_virtual_2_configuration			= {
             NGINXConfigurationFS.__ATTR_CTX__:			\
 	        {
                      NGINXConfigurationFS.__ID_SERVER__:	\
@@ -159,6 +174,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                  ],
                              self._unmount_filename: 		\
                                  [ self._unmount_filename ],
+                             self._url2entity_filename:		\
+                                 [ self._url2entity_filename ],
                          },
                 },
             NGINXConfigurationFS.__READ_CTX__:			\
@@ -177,6 +194,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                  [ self._redirect_filename ],
                              self._unmount_filename: 		\
                                  [ self._unmount_filename ],
+                             self._url2entity_filename: 		\
+                                 [ self._url2entity_filename ],
                          },
                 },
         }
@@ -242,6 +261,10 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
                      shared_infrastructure.cache_container_agnostic_configuration.clear()
 
+                     shared_infrastructure.cache_container_ssl_configuration.clear()
+
+                     shared_infrastructure.cache_container_url2entity_configuration.clear()
+
                      shared_infrastructure.cache_container_nginx_fs.clear()
 
              process_IN_MODIFY	= process_evt
@@ -255,7 +278,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         self._template_notifier.start()
 	
-        self._agnostic_configuration.notifier.start()
+        for configuration in self._l_configurations:
+            configuration.notifier.start()
 
         self._ssl_configuration.notifier.start()
 
@@ -277,6 +301,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         return 									\
             len( self.l_bad_configurations ) 				+ 	\
             len( self._agnostic_configuration.l_bad_configurations ) 	+  	\
+            len( self._url2entity_configuration.l_bad_configurations )     +	\
             len( self._ssl_configuration.l_bad_configurations )			\
             != 0
     have_bad_configurations = property( get_have_bad_configurations, None, None )
@@ -297,7 +322,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         'conf',
                         self._mount_filename,
                         self._unmount_filename,
-                        self._redirect_filename
+                        self._redirect_filename,
+                        self._url2entity_filename,
                     ]
                 )
             )
@@ -347,17 +373,17 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                          map(
                                              lambda mapping_type:
                                                  [ server, port, mapping_type ],
-                                                 self._d_id_mapping_type_agnostic_2_virtual.get(
+                                                 self._d_id_mapping_type_configuration_2_virtual.get(
                                                      id_configuration[ 2 ],
                                                      [ id_configuration[ 2 ] ]
                                                  )
                                          ),
-                                         self._d_id_port_agnostic_2_virtual.get(
+                                         self._d_id_port_configuration_2_virtual.get(
                                              id_configuration[ 1 ],
                                              [ id_configuration[ 1 ] ]
                                          )
                                  ),
-                            self._d_id_server_agnostic_2_virtual.get(
+                            self._d_id_server_configuration_2_virtual.get(
                                  id_configuration[ 0 ],
                                  [ id_configuration[ 0 ] ]
                             )
@@ -376,7 +402,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                 list.__add__,
                                 map(
                                     process_id_configuration,
-                                    self._agnostic_configuration.id_configurations
+                                    self._agnostic_configuration.id_configurations +	\
+                                    self._url2entity_configuration.id_configurations
                                 ) or [ [] ]
                             )
                         )
@@ -399,7 +426,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
            path_elements est une liste d'elements composants le nom du fichier
            with_resolved_cross_mapping permet de specifier qu'on recherche
            le fichier correspondant uniquement aux criteres du path_elements
-           ou qu'on applique les maping provenant des tableaux *virtual_2_agnostic_attrctx
+           ou qu'on applique les maping provenant des tableaux *virtual_2_configuration_attrctx
         """
         if 	len( path_elements ) == 0:
             return ( '.*', '.*', '.*' )
@@ -417,13 +444,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
                 return ( 
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
                             m_id.group( 'server' ),
                             [ m_id.group( 'server' ) ]
                         )
                     ),
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
                             m_id.group( 'port' ),
                             [ m_id.group( 'port' ) ]
                         )
@@ -440,19 +467,19 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
                 return (
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_SERVER__ ].get(
                             m_id.group( 'server' ),
                             [ m_id.group( 'server' ) ]
                         )
                     ),
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_PORT__ ].get(
                             m_id.group( 'port' ),
                             [ m_id.group( 'port' ) ]
                         )
                     ),
                     '|'.join(
-                        self._d_id_virtual_2_agnostic[ ctx ][ NGINXConfigurationFS.__ID_MAPPING_TYPE__ ].get(
+                        self._d_id_virtual_2_configuration[ ctx ][ NGINXConfigurationFS.__ID_MAPPING_TYPE__ ].get(
                             m_id.group( 'mapping_type' ),
                             [ m_id.group( 'mapping_type' ) ]
                         )
@@ -471,28 +498,46 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         path_elements           = filter( None,  path.split( '/' ) )
 
+        elements_selector	=						\
+            self.get_id_from_filename_elements(
+                path_elements,
+                NGINXConfigurationFS.__ATTR_CTX__
+            )
+
         st = dict(
             st_mode	=	( ( S_IFDIR | 0755 ) if len( path_elements ) == 0 else ( S_IFREG | 0644 ) ), 
             st_nlink	=	2, 
             st_size	= 	( 4096 * int( 1 + ceil( len( self.readdir( path ) ) / 4096 ) ) ) if len( path_elements ) == 0 else len( self.read( path, -1, 0, fh ) ),
-            st_atime 	= 	self._agnostic_configuration.get_last_atime(
-                                    *self.get_id_from_filename_elements(
-                                        path_elements,
-                                        NGINXConfigurationFS.__ATTR_CTX__
-                                    )
-                                ),
-            st_ctime 	= 	self._agnostic_configuration.get_last_ctime(
-                                    *self.get_id_from_filename_elements(
-                                        path_elements,
-                                        NGINXConfigurationFS.__ATTR_CTX__
-                                    )
-                                ),
-            st_mtime 	= 	self._agnostic_configuration.get_last_mtime(
-                                    *self.get_id_from_filename_elements(
-                                        path_elements,
-                                        NGINXConfigurationFS.__ATTR_CTX__
-                                    )
-                                ), 
+            st_atime 	= 							\
+                max(								\
+                    map(							\
+                        lambda configuration:					\
+                            configuration.get_last_atime(			\
+                                *elements_selector				\
+                            ),							\
+                        self._l_configurations					\
+                    ) or [ 0 ]							\
+               ), 								\
+            st_ctime 	= 							\
+                max(								\
+                    map(							\
+                        lambda configuration:					\
+                            configuration.get_last_ctime(			\
+                                *elements_selector				\
+                            ),							\
+                        self._l_configurations					\
+                    ) or [ 0 ]							\
+               ), 								\
+            st_mtime 	= 							\
+                max(								\
+                    map(							\
+                        lambda configuration:					\
+                            configuration.get_last_mtime(			\
+                                *elements_selector				\
+                            ),							\
+                        self._l_configurations					\
+                    ) or [ 0 ]							\
+               ), 								\
             st_uid	=	self._uid_owner,
             st_gid	=	self._gid_owner,
         )
@@ -573,14 +618,17 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         }
 
         l_bad_id = [ 
-            self._agnostic_configuration._root_agnostic_configuration,
+            self._agnostic_configuration._root_configuration,
+            self._url2entity_configuration._root_configuration,
             self._ssl_configuration._root_ssl_configuration,
             'FS', 
         ]
 
         d_bad = {
-           self._agnostic_configuration._root_agnostic_configuration:
+           self._agnostic_configuration._root_configuration:
                self._agnostic_configuration.l_bad_configurations,
+           self._url2entity_configuration._root_configuration:
+               self._url2entity_configuration.l_bad_configurations,
            self._ssl_configuration._root_ssl_configuration:
                self._ssl_configuration.l_bad_configurations,
            'FS':
@@ -654,6 +702,12 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         port, 
                         self._mount_filename 
                     ),
+                converted_url2entity_map_filename	= \
+                    self.get_converted_map_filename(
+                        server,
+                        port,
+                        self._url2entity_filename
+                    ),
                 root_nginx_configuration	= \
                     self._root_nginx_configuration.rstrip( os.sep ) + os.sep,
                 ssl_configuration		= \
@@ -715,11 +769,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         port 
                     ),
                 mount_configurations		= \
-                    self._agnostic_configuration.d_configurations[ 
-                        server
-                    ][ 
-                        port 
-                    ].get( 
+                    self._agnostic_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
                         self._mount_filename,
                         {}, 
                     ).get(
@@ -727,11 +783,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         []
                     ),
                 unmount_configurations		= \
-                    self._agnostic_configuration.d_configurations[ 
-                        server
-                    ][ 
-                        port 
-                    ].get( 
+                    self._agnostic_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
                         self._unmount_filename,
                         {}
                     ).get(
@@ -739,11 +797,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         []
                     ),
                 redirect_configurations		= \
-                    self._agnostic_configuration.d_configurations[ 
-                        server
-                    ][ 
-                        port 
-                    ].get( 
+                    self._agnostic_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
                         self._redirect_filename,
                         {}
                     ).get(
@@ -752,6 +812,20 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                     ),
                 ssl_configuration		= \
                     self._ssl_configuration.get_ssl_configuration( server, port ),
+                url2entity_configurations		= \
+                    self._url2entity_configuration.d_configurations.get(
+                        server,
+                        {}
+                    ).get(
+                        port,
+                        {}
+                    ).get(
+                        self._url2entity_filename,
+                        {}
+                    ).get(
+                        'mappings',
+                        []
+                    ),
         ).encode( 'utf-8' )
 
 
@@ -761,7 +835,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         self._ssl_configuration.notifier.stop()
 
-        self._agnostic_configuration.notifier.stop()
+        for configuration in self._l_configurations:
+            configuration.notifier.stop()
 
 
     access 	= None
