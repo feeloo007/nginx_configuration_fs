@@ -680,7 +680,7 @@ class AgnosticConfiguration(
             volatile.cache(
                 shared_infrastructure.cache_key,
                 lambda *args:                                   \
-                    shared_infrastructure.cache_container_url2entity_configuration
+                    shared_infrastructure.cache_container_agnostic_configuration
             )(
                 shared_infrastructure.get_id_configurations
             )
@@ -692,7 +692,7 @@ class AgnosticConfiguration(
         volatile.cache(
             shared_infrastructure.cache_key,
             lambda *args:                                       		\
-                shared_infrastructure.cache_container_url2entity_configuration
+                shared_infrastructure.cache_container_agnostic_configuration
         )(
             shared_infrastructure.filter_id_configurations
         )
