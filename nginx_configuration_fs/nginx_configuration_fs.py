@@ -732,11 +732,13 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                     d[ 'dst_upstream_resolved_ips' ],
                             }
                             for d in
-                            self._agnostic_configuration.d_configurations[
-                                server
-                            ][
-                                port
-                            ].get(
+                            self._agnostic_configuration.d_configurations.get(
+                                server,
+                                {}
+                            ).get(
+                                port,
+                                {}
+                            ).get(
                                 self._mount_filename,
                                 {},
                             ).get(
