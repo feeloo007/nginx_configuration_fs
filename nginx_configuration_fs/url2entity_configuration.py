@@ -39,7 +39,7 @@ class URL2EntityConfiguration(
     _comment_pattern			= 	'''^\s*(?P<comment>#+)'''
 
     _url2entity_pattern			= 	\
-        '''^\s*%s\s*(?P<appcode>[A-Z][0-9]{2})\s*(?P<env>[0-9A-Z]{2})\s*(?P<aera>[DV][0-9A-F])\s*(?P<virtual_ngv_num>[0-9]{2})\s*''' % (
+        '''^\s*%s\s+(?:\/\*(?P<listening_uri_extra>[^\*]*)\*\/\s+){0,1}(?P<appcode>[A-Z][0-9]{2})\s+(?:/\*(?P<appcode_extra>[^\*]*)\*\/\s+){0,1}(?P<env>[0-9A-Z]{2})\s+(?:\/\*(?P<env_extra>[^\*]*)\*\/\s+){0,1}(?P<aera>[DV][0-9A-F])\s+(?:\/\*(?P<aera_extra>[^\*]*)\*\/\s+){0,1}(?P<virtual_ngv_num>[0-9]{2})(?:\s+\/\*(?P<virtual_ngv_num_extra>[^\*]*)\*\/){0,1}''' % (
             rfc3987.format_patterns(
                 URI		= 'URI', 
             )['URI'],
@@ -68,6 +68,16 @@ class URL2EntityConfiguration(
             '',
         )
 
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'listening_uri_',
+        )
 
         shared_infrastructure.listen_ssl_process_uri( 
             lambda: self._root_configuration,
@@ -81,14 +91,79 @@ class URL2EntityConfiguration(
             '',
         )
 
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'appcode_',
+        )
+
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'env_',
+        )
+
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'aera_',
+        )
+
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'virtual_ngv_num_',
+        )
+
+
         URL2EntityConfiguration.add_to_configuration( 
             d, 
             lambda d: {
-                        'uri'			: d[ 'URI' ],
-                        'appcode'		: d[ 'appcode' ],
-                        'env'			: d[ 'env' ],
-                        'aera'			: d[ 'aera' ],
-                        'virtual_ngv_num'	: d[ 'virtual_ngv_num' ],
+                        'uri'			:
+                            shared_infrastructure.str_with_extra(
+                                d[ 'URI' ],
+                                d[ 'listening_uri_extra' ],
+                            ),
+                        'appcode'		:
+                            shared_infrastructure.str_with_extra(
+                                d[ 'appcode' ],
+                                d[ 'appcode_extra' ],
+                            ),
+                        'env'			:
+                            shared_infrastructure.str_with_extra(
+                                d[ 'env' ],
+                                d[ 'env_extra' ],
+                            ),
+                        'aera'			:
+                            shared_infrastructure.str_with_extra(
+                                d[ 'aera' ],
+                                d[ 'aera_extra' ],
+                            ),
+                        'virtual_ngv_num'	:
+                            shared_infrastructure.str_with_extra(
+                                d[ 'virtual_ngv_num' ],
+                                d[ 'virtual_ngv_num_extra' ],
+                            ),
                     }, 
             d_configurations,
             filepath,

@@ -29,6 +29,10 @@ from    plone.synchronize       import  synchronized
 
 import 	fuse
 
+import	jsonschema
+
+import stringlike
+
 ########################
 # Gestion de cache plone
 ########################
@@ -126,6 +130,85 @@ def common_process_uri(
     d[ '%sfragment' % ( suffixwith ) ]      = d_rfc3987.get( 'fragment' )
     d[ '%suserinfo' % ( suffixwith ) ]      = d_rfc3987.get( 'userinfo' )
 
+def common_process_extra(
+    le_root_configuration,
+    d,
+    current_line,
+    current_server,
+    current_port,
+    current_mapping_type,
+    l_bad_configurations,
+    suffixwith,
+):
+    if 								\
+        d[ '%sextra' % ( suffixwith ) ] is None or		\
+        re.match( '^\s*$', d[ '%sextra' % ( suffixwith ) ] )    \
+        :
+        d[ '%sextra' % ( suffixwith ) ]		= {}
+        return
+
+    try:
+
+            extra 		=	json.loads( d[ '%sextra' % ( suffixwith ) ] )
+
+    except:
+
+        l_bad_configurations.append(
+            (
+                 '%s not a valid json format from %s' % (
+                     d[ '%sextra' % ( suffixwith ) ],
+                     current_line
+                 ),
+                 le_root_configuration(),
+                 current_server,
+                 current_port,
+                 current_mapping_type
+            )
+        )
+
+        d[ '%sextra' % ( suffixwith ) ]		= {}
+
+        # On considere qu'un format invalide
+        # 'extra n'invalide pas la ligne mais
+        # supprime les extras
+        #raise Exception
+        return
+
+    try:
+
+        jsonschema.validate(
+            extra,
+            {
+                "type"	:	"object",
+            },
+        )
+
+        d[ '%sextra' % ( suffixwith ) ]		= extra
+
+    except:
+
+        d[ '%sextra' % ( suffixwith ) ]		= {}
+
+        l_bad_configurations.append(
+            (
+                 '%s not a compatible json format from %s' % (
+                     extra,
+                     current_line
+                 ),
+                 le_root_configuration(),
+                 current_server,
+                 current_port,
+                 current_mapping_type
+            )
+        )
+
+        # On considere qu'un format invalide
+        # 'extra n'invalide pas la ligne mais
+        # supprime les extras
+        #raise Exception
+        return
+
+
 def listen_ssl_process_uri(
     le_root_configuration,
     le_ssl_configuration,
@@ -217,6 +300,8 @@ class SpecificKeysEncoder( json.JSONEncoder ):
     def default( self, obj ):
         if isinstance( obj, DictWithMaskableKeys ):
           return obj.itervisibleitems()
+        elif isinstance( obj, str_with_extra ):
+          return [ str( obj ), obj.extra ]
         return json.JSONEncoder.default( self, obj )
 
 
@@ -823,3 +908,82 @@ def get_last_mtime(
         pattern_port,
         pattern_mapping_type
     )
+
+##################################
+# Derivation de la classe str pour
+# contenir un attribut etra
+##################################
+class str_with_extra( stringlike.StringLike ):
+
+    def __init__( self, value, extra ):
+
+        self._value      = value
+        self._extra      = extra
+
+    def __str__( self ):
+
+        return self._value
+
+    def __repr__( self ):
+
+        return repr( str( self ) ) + ' /* ' + repr( self._extra ) + ' */'
+
+    def get_extra( self ):
+
+        return self._extra
+
+    extra               =               \
+        property(
+            get_extra,
+            None,
+            None,
+        )
+
+###################################
+# Decorator pour faire un singleton
+# tenant compte des parametres de
+# __init__
+###################################
+def Singleton( theClass ):
+    """ decorator for a class to make a singleton out of it """
+
+    classInstances = {}
+
+    def getInstance( *args, **kwargs ):
+        """ creating or just return the one and only class instance.
+            The singleton depends on the parameters used in __init__ """
+
+        key = ( theClass, args, str(kwargs) )
+
+        if key not in classInstances:
+
+            classInstances[ key ] = theClass( *args, **kwargs )
+
+        return classInstances[ key ]
+
+    return getInstance
+
+
+####################################################
+# Class deriavnt de dict et renvoyant un schema
+# par defaut contenatn l'unique regle "de type objet
+# json si la cle n'existe pas
+####################################################
+class dict_with_default_inline_schema( dict ):
+
+    def __getitem__(
+        o,
+        key,
+    ):
+        try:
+           return dict.__getitem__( o, key )
+        except:
+           return                                                               \
+              {
+                  u'$schema'    :                                       \
+                      u'http://json-schema.org/draft-04/schema#',
+                  u'title'      :                                               \
+                      u'default_inline_extra',
+                  u'type'       :                                               \
+                      u'object',
+              }

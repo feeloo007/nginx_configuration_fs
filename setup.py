@@ -31,6 +31,8 @@ setup(name='nginx_configuration_fs',
           'rfc3987==1.3.1',
           'plac==0.9.1',
           'twisted==13.0.0',
+          'jsonschema==2.0.0',
+          'stringlike==0.3.2',
       ],
       entry_points="""
       # -*- Entry points: -*-

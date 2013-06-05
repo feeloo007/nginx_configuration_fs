@@ -39,7 +39,7 @@ class AgnosticConfiguration(
     _comment_pattern			= 	'''^\s*(?P<comment>#+)'''
 
     _mount_pattern			= 	\
-        '''^\s*%s\s+%s''' % (
+        '''^\s*%s\s+(?:\/\*(?P<listening_uri_extra>[^\*]*)\*\/\s+){0,1}%s(?:\s+\/\*(?P<backed_uri_extra>[^\*]*)\*\/){0,1}''' % (
             rfc3987.format_patterns(
                 URI		= 'src_URI', 
             )['URI'],
@@ -72,6 +72,17 @@ class AgnosticConfiguration(
             'src_'
         )
 
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'listening_uri_'
+        )
+
         shared_infrastructure.common_process_uri( 
             lambda: self._root_configuration,
             d, 
@@ -80,7 +91,18 @@ class AgnosticConfiguration(
             port, 
             mapping_type, 
             l_bad_configurations, 
-            'dst_' 
+            'dst_'
+        )
+
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'backed_uri_'
         )
 
         shared_infrastructure.listen_ssl_process_uri( 
@@ -94,6 +116,7 @@ class AgnosticConfiguration(
             l_bad_configurations, 
             'src_'
         )
+
 
         def get_ips_for_upstream( host ):
 
@@ -150,7 +173,10 @@ class AgnosticConfiguration(
             d, 
             lambda d: {
                         'src':
-                            d[ 'src_URI' ],
+                            shared_infrastructure.str_with_extra(
+                                d[ 'src_URI' ],
+                                d[ 'listening_uri_extra' ],
+   			    ), 
                         'src_scheme':
                             d[ 'src_scheme' ],
                         'src_userinfo':
@@ -164,7 +190,10 @@ class AgnosticConfiguration(
                         'src_query':
                             d[ 'src_query' ] or '',
                         'dst':
-                            d[ 'dst_URI' ],
+                            shared_infrastructure.str_with_extra(
+                                d[ 'dst_URI' ],
+                                d[ 'backed_uri_extra' ],
+                            ),
                         'dst_scheme':
                             d[ 'dst_scheme' ],
                         'dst_userinfo':
@@ -198,7 +227,7 @@ class AgnosticConfiguration(
 
 
     _unmount_pattern			= 	\
-        '''^\s*%s''' % (
+        '''^\s*%s(?:\s+\/\*(?P<listening_uri_extra>[^\*]*)\*\/){0,1}''' % (
             rfc3987.format_patterns(
                 URI		= 'URI', 
             )['URI'],
@@ -239,10 +268,25 @@ class AgnosticConfiguration(
             '' 
         )
 
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'listening_uri_',
+        )
+
         AgnosticConfiguration.add_to_configuration( 
             d, 
             lambda m: { 
-                'uri': d[ 'URI' ]
+                'uri'	:
+                    shared_infrastructure.str_with_extra(
+                        d[ 'URI' ],
+                        d[ 'listening_uri_extra' ],
+                    ),
             },
             d_configurations,
             filepath,
@@ -254,7 +298,7 @@ class AgnosticConfiguration(
 
 
     _redirect_pattern			= 	\
-        '''^\s*%s\s+%s''' % (
+        '''^\s*%s\s+(?:\/\*(?P<listening_uri_extra>[^\*]*)\*\/\s+){0,1}%s(?:\s+\/\*(?P<redirected_uri_extra>[^\*]*)\*\/){0,1}''' % (
             rfc3987.format_patterns(
                 URI		= 'src_URI', 
             )['URI'],
@@ -286,6 +330,17 @@ class AgnosticConfiguration(
             'src_'
         )
 
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'listening_uri_',
+        )
+
         shared_infrastructure.common_process_uri( 
             lambda: self._root_configuration,
             d, 
@@ -295,6 +350,17 @@ class AgnosticConfiguration(
             mapping_type, 
             l_bad_configurations, 
             'dst_' 
+        )
+
+        shared_infrastructure.common_process_extra(
+            lambda: self._root_configuration,
+            d,
+            line,
+            server,
+            port,
+            mapping_type,
+            l_bad_configurations,
+            'redirected_uri_',
         )
 
         shared_infrastructure.listen_ssl_process_uri( 
@@ -312,8 +378,16 @@ class AgnosticConfiguration(
         AgnosticConfiguration.add_to_configuration( 
             d, 
             lambda d: {
-                        'src': d[ 'src_URI' ],
-                        'dst': d[ 'dst_URI' ],
+                        'src'		:
+                             shared_infrastructure.str_with_extra(
+                                 d[ 'src_URI' ],
+                                 d[ 'listening_uri_extra' ],
+                 	     ),
+                        'dst'		:
+                             shared_infrastructure.str_with_extra(
+                                 d[ 'dst_URI' ],
+                                 d[ 'redirected_uri_extra' ],
+            		     ), 
                     }, 
             d_configurations,
             filepath,
