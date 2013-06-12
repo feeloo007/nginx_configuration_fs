@@ -30,6 +30,8 @@ import  hashlib
 
 import	shared_infrastructure
 
+import	extra_from_distrib
+
 class URL2EntityConfiguration(
     shared_infrastructure.IAddToConfigurationWithMappingType
     ):
@@ -200,6 +202,19 @@ class URL2EntityConfiguration(
 
         self._ssl_configuration			= ssl_configuration
 
+        self._extra_from_distrib                =                               \
+            extra_from_distrib.ExtraFromDistrib(
+                self._restart_nginx
+            )
+
+        self._extra_from_distrib.register_cache_to_clear(
+            shared_infrastructure.cache_container_agnostic_configuration
+        )
+
+        self._extra_from_distrib.register_configuration_to_reload(
+            lambda: self.load_configurations( reload_without_version_control = False )
+        )
+
         # Gestion de iNotify	
         wm 					= pyinotify.WatchManager() 
 	mask 					= 				\
@@ -282,6 +297,10 @@ class URL2EntityConfiguration(
 
 
         self._notifier 				= pyinotify.ThreadedNotifier( wm, EventHandler() )
+
+        self._extra_from_distrib.register_notifier(
+            self._notifier
+        )
 
         self._notifier.coalesce_events()
 
