@@ -51,7 +51,8 @@ class ExtraFromDistrib:
             None
     ): 
 
-        self._l_cache_to_clear			= []
+        self._l_cache_to_clear			= 				\
+            [ shared_infrastructure.cache_extra_from_distrib ]
 
 	self._l_le_configuration_to_reload	= []
 
@@ -177,6 +178,49 @@ class ExtraFromDistrib:
         return self._d_configurations
     d_configurations 		= property( get_d_configurations, None, None )
 
+    @volatile.cache( shared_infrastructure.cache_key, lambda *args: shared_infrastructure.cache_extra_from_distrib )
+    def get_default_setter_validator( self, id_schema ):
+
+        def set_defaults(
+            validator,
+            properties,
+            instance,
+            schema
+        ):
+
+            for error in 							\
+                jsonschema.validators.validator_for(
+                    self.d_configurations[ id_schema ]
+                ).VALIDATORS["properties"](
+                    validator,
+                    properties,
+                    instance,
+                    schema,
+                ):
+                raise error
+
+            for property, subschema in properties.iteritems():
+
+                if 'default' in subschema:
+
+                    instance.setdefault(
+                        property,
+                        subschema[ 'default' ]
+                    )
+
+        return 									\
+            jsonschema.validators.extend(
+                jsonschema.validators.validator_for(
+                    self.d_configurations[ id_schema ]
+                ),
+                {
+                    'properties' : set_defaults
+                },
+            )(
+                self.d_configurations[ id_schema ],
+            )
+
+
     @synchronized( _configurations_lock )
     def get_l_bad_configurations( self ):
         return self._l_bad_configurations
@@ -227,8 +271,8 @@ class ExtraFromDistrib:
 
             except Exception, e:
 
-                # Pour qu'une exception ai lieu sur la validation u scheam
-                # il faut y aller vraiement fort
+                # Pour qu'une exception ai lieu sur la validation du schema
+                # il faut y aller vraiment fort
                 l_bad_configurations.append( 
                     ( '%s : %s. Using default inline schema %r' % 						\
                         ( 
@@ -259,13 +303,13 @@ class ExtraFromDistrib:
             self._l_bad_configurations     =       l_bad_configurations
 
             map(
-                lambda le: le(),
-                self._l_le_configuration_to_reload,
+                lambda cache: cache.clear(),
+                self._l_cache_to_clear,
             )
 
             map(
-                lambda cache: cache.clear(),
-                self._l_cache_to_clear,
+                lambda le: le(),
+                self._l_le_configuration_to_reload,
             )
 
             return True

@@ -78,6 +78,7 @@ class URL2EntityConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'listening_uri_',
         )
 
@@ -101,6 +102,7 @@ class URL2EntityConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'appcode_',
         )
 
@@ -112,6 +114,7 @@ class URL2EntityConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'env_',
         )
 
@@ -123,6 +126,7 @@ class URL2EntityConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'aera_',
         )
 
@@ -134,6 +138,7 @@ class URL2EntityConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'virtual_ngv_num_',
         )
 

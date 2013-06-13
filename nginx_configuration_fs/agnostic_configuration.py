@@ -82,6 +82,7 @@ class AgnosticConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'listening_uri_'
         )
 
@@ -104,6 +105,7 @@ class AgnosticConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'backed_uri_'
         )
 
@@ -278,6 +280,7 @@ class AgnosticConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'listening_uri_',
         )
 
@@ -340,6 +343,7 @@ class AgnosticConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'listening_uri_',
         )
 
@@ -362,6 +366,7 @@ class AgnosticConfiguration(
             port,
             mapping_type,
             l_bad_configurations,
+            lambda: self._extra_from_distrib,
             'redirected_uri_',
         )
 

@@ -57,6 +57,7 @@ cache_container_agnostic_configuration          = {}
 cache_container_ssl_configuration          	= {}
 cache_container_url2entity_configuration          	= {}
 cache_container_nginx_fs                        = {}
+cache_extra_from_distrib                        = {}
 
 
 
@@ -130,6 +131,7 @@ def common_process_uri(
     d[ '%sfragment' % ( suffixwith ) ]      = d_rfc3987.get( 'fragment' )
     d[ '%suserinfo' % ( suffixwith ) ]      = d_rfc3987.get( 'userinfo' )
 
+
 def common_process_extra(
     le_root_configuration,
     d,
@@ -138,24 +140,25 @@ def common_process_extra(
     current_port,
     current_mapping_type,
     l_bad_configurations,
+    le_extra_from_distrib,
     suffixwith,
 ):
     if 								\
         d[ '%sextra' % ( suffixwith ) ] is None or		\
         re.match( '^\s*$', d[ '%sextra' % ( suffixwith ) ] )    \
         :
-        d[ '%sextra' % ( suffixwith ) ]		= {}
-        return
+        d[ '%sextra' % ( suffixwith ) ]		= '{}'
 
     try:
 
-            extra 		=	json.loads( d[ '%sextra' % ( suffixwith ) ] )
+            extra 				= 		\
+                json.loads( d[ '%sextra' % ( suffixwith ) ] )
 
     except:
 
         l_bad_configurations.append(
             (
-                 '%s not a valid json format from %s' % (
+                 '%s not a correct json format from %s. Using default value {}' % (
                      d[ '%sextra' % ( suffixwith ) ],
                      current_line
                  ),
@@ -166,34 +169,22 @@ def common_process_extra(
             )
         )
 
-        d[ '%sextra' % ( suffixwith ) ]		= {}
-
-        # On considere qu'un format invalide
-        # 'extra n'invalide pas la ligne mais
-        # supprime les extras
-        #raise Exception
-        return
+        extra					= {}
 
     try:
 
-        jsonschema.validate(
-            extra,
-            {
-                "type"	:	"object",
-            },
-        )
+        le_extra_from_distrib().get_default_setter_validator(
+            '%sextra' % ( suffixwith )
+        ).validate( extra )
 
-        d[ '%sextra' % ( suffixwith ) ]		= extra
-
-    except:
-
-        d[ '%sextra' % ( suffixwith ) ]		= {}
+    except Exception, e:
 
         l_bad_configurations.append(
             (
-                 '%s not a compatible json format from %s' % (
-                     extra,
-                     current_line
+                 '%s not valid json format from %s. %s. Using default value {}' % (
+                     d[ '%sextra' % ( suffixwith ) ],
+                     current_line,
+                     e.message,
                  ),
                  le_root_configuration(),
                  current_server,
@@ -202,11 +193,13 @@ def common_process_extra(
             )
         )
 
-        # On considere qu'un format invalide
-        # 'extra n'invalide pas la ligne mais
-        # supprime les extras
-        #raise Exception
-        return
+        extra					= {}
+
+        le_extra_from_distrib().get_default_setter_validator(
+            None
+        ).validate( extra )
+
+    d[ '%sextra' % ( suffixwith ) ]		= extra
 
 
 def listen_ssl_process_uri(
