@@ -1,10 +1,11 @@
+{% import 'listening_uri_extra.tpl' as listening_uri_extra %}
 map $scheme://$host:$server_port$uri $not_resolved_backend_{{ suffix_map }} {
 
     default	"";
 
     {% for mount in mount_configurations -%}
     {% if not mount.dst_upstream_resolved_ips -%}
-    ~^{{ mount.src }} 	{{mount.dst_host}};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} 	{{mount.dst_host}};
     {%endif -%}
     {% endfor -%}
 
@@ -14,7 +15,7 @@ map $scheme://$host:$server_port$uri $upstream_and_prefix_uri_{{ suffix_map }} {
 
     default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/__NO_CONFIGURATION__.html;
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} {{ mount.dst_upstream }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_upstream }};
     {% endfor -%}
 
 }
@@ -25,7 +26,7 @@ map $scheme://$host:$server_port$uri $added_query_string_{{ suffix_map }} {
 
     {% for mount in mount_configurations -%}
     {% if mount.dst_query -%}
-    ~^{{ mount.src }} {{ mount.dst_query }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_query }};
     {% endif -%}
     {% endfor %}
 
@@ -36,7 +37,7 @@ map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_with_port_{{ suf
     default 	"";
 
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} {{ mount.proxy_redirect_to_replace_with_port }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.proxy_redirect_to_replace_with_port }};
     {% endfor -%}
 
 }
@@ -46,7 +47,7 @@ map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_without_port_{{ 
     default 	"";
 
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} {{ mount.proxy_redirect_to_replace_without_port }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.proxy_redirect_to_replace_without_port }};
     {% endfor -%}
 
 }
@@ -56,7 +57,7 @@ map $scheme://$host:$server_port$uri $prxfied_and_prefix_uri_{{ suffix_map }} {
     default 	"";
 
     {% for mount in mount_configurations -%}
-    ~^(?<captured>{{ mount.src }}).*$	$captured;
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^(?<captured>{{ mount.src }}).*$	$captured;
     {% endfor -%}
 
 }
@@ -65,7 +66,7 @@ map $scheme://$host:$server_port$uri $suffix_uri_{{ suffix_map }} {
 
     default 	"";
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }}(?<captured>.*)$ $captured;
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }}(?<captured>.*)$ $captured;
     {% endfor -%}
 
 }
@@ -75,7 +76,7 @@ map $scheme://$host:$server_port$uri $proxy_cookie_domain_to_replace_{{ suffix_m
     default     "";
 
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} {{ mount.src_host }}:{{ mount.dst_port }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.src_host }}:{{ mount.dst_port }};
     {% endfor -%}
 
 }
@@ -85,7 +86,7 @@ map $scheme://$host:$server_port$uri $proxy_cookie_domain_replaced_by_{{ suffix_
     default     "";
 
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} {{ mount.src_host }}:{{ mount.src_port }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.src_host }}:{{ mount.src_port }};
     {% endfor -%}
 
 }
@@ -95,7 +96,7 @@ map $scheme://$host:$server_port$uri $proxy_cookie_path_to_replace_{{ suffix_map
     default     "";
 
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} ~^{{ mount.dst_path }}$;
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} ~^{{ mount.dst_path }}$;
     {% endfor -%}
 
 }
@@ -106,7 +107,7 @@ map $scheme://$host:$server_port$uri $proxy_cookie_path_to_replace_without_suffi
 
     {% for mount in mount_configurations -%}
     {% if mount.dst_path.endswith( '/' ) and mount.dst_path.rstrip( '/' )|length > 0 -%}
-    ~^{{ mount.src }} {{ mount.dst_path.rstrip( '/' ) }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_path.rstrip( '/' ) }};
     {% endif -%}
     {% endfor -%}
 
@@ -117,7 +118,7 @@ map $scheme://$host:$server_port$uri $proxy_cookie_path_replaced_by_{{ suffix_ma
     default     "";
 
     {% for mount in mount_configurations -%}
-    ~^{{ mount.src }} {{ mount.src_path }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.src_path }};
     {% endfor -%}
 
 }
@@ -128,7 +129,7 @@ map $scheme://$host:$server_port$uri $proxy_cookie_path_replaced_by_for_without_
 
     {% for mount in mount_configurations -%}
     {% if mount.src_path.endswith( '/' ) and mount.src_path.rstrip( '/' )|length > 0 -%}
-    ~^{{ mount.src }} {{ mount.src_path.rstrip( '/' ) }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.src_path.rstrip( '/' ) }};
     {% endif -%}
     {% endfor -%}
 

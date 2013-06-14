@@ -617,6 +617,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                 return self.read_map( pattern_server, pattern_port, pattern_mapping_type )
 
             except:
+                import traceback
+                traceback.print_exc()
                 raise FuseOSError( ENOENT )
 
         raise FuseOSError( ENOENT )
