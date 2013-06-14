@@ -1,0 +1,14 @@
+{
+    "$schema"		: "http://json-schema.org/draft-04/schema#",
+    "title"            	: "redirected_uri_extra",
+    "type"             	: "object",
+    "properties"    	:
+        {
+             "redirect_code"	:
+                          {
+                               "type"          : "number",
+                               "enum"          : [ 301, 302 ],
+                               "default"       : 302
+                          }
+        }
+}

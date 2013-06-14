@@ -1,3 +1,4 @@
+{% import 'redirected_uri_extra.tpl' as redirected_uri_extra with context %}
 log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_local] "$request" '
                  '$status $body_bytes_sent "$http_referer" '
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
@@ -115,10 +116,20 @@ server {
     {% endif -%}
 
     {% if converted_redirect_map_filename in list_converted_map_filenames %}
-        if ( $redirect_to_{{ suffix_map }} ) {
-            return 		302 	$redirect_to_{{ suffix_map }};
+        {% call( redirect_code ) redirected_uri_extra.loop_on_redirected_code() -%}
+        # Redirect explicite, issue d'une regle redirect utilisant la valeur enumeree = {{ redirect_code }}
+        if ( $redirect_code_{{ redirect_code }}_to_{{ suffix_map }} ) {
+            return 		{{ redirect_code }} 	$redirect_to_{{ suffix_map }};
         }
-    {% else %}
+        {% endcall -%}
+
+        {% call( default_redirected_code ) redirected_uri_extra.default_redirected_code() -%}
+        # redirect implicite, issue d'une regle mount, utilisant la valeur par default = {{ default_redirected_code }}
+        if ( $from_mount_redirect_code_to_{{ suffix_map }} ) {
+            return 		{{ default_redirected_code }} 	$redirect_to_{{ suffix_map }};
+        }
+        {% endcall -%}
+    {% else -%}
         # Pas de configuration redirect pour ce serveur
     {% endif -%}
 

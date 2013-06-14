@@ -768,6 +768,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                             )
                         ]
                     ),
+               extra_from_distrib_configurations	= \
+                   self._extra_from_distrib.d_configurations,
         ).encode( 'utf-8' )
 
 
@@ -849,6 +851,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         'mappings',
                         []
                     ),
+               extra_from_distrib_configurations	= \
+                   self._extra_from_distrib.d_configurations,
         ).encode( 'utf-8' )
 
 
