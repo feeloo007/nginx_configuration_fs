@@ -1,4 +1,5 @@
 {% import 'listening_uri_extra.tpl' as listening_uri_extra %}
+{% import 'backed_uri_extra.tpl' as backed_uri_extra with context %}
 map $scheme://$host:$server_port$uri $not_resolved_backend_{{ suffix_map }} {
 
     default	"";
@@ -134,3 +135,25 @@ map $scheme://$host:$server_port$uri $proxy_cookie_path_replaced_by_for_without_
     {% endfor -%}
 
 }
+
+{% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() -%}
+map $scheme://$host:$server_port$uri $backend_{{ backend_combination[ "combination" ] }}_{{ suffix_map }} {
+
+    default     "";
+
+    {% for mount in mount_configurations -%}
+    {% if
+          mount.dst.extra.proxy_buffering 		== backend_combination[ "proxy_buffering" ]
+          and
+          mount.dst.extra.proxy_connect_timeout 	== backend_combination[ "proxy_connect_timeout" ]
+          and
+          mount.dst.extra.proxy_read_timeout 		== backend_combination[ "proxy_read_timeout" ]
+    -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ backend_combination[ "index" ] }};
+    {% else -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} "";
+    {% endif -%}
+    {% endfor -%}
+
+}
+{% endcall -%}
