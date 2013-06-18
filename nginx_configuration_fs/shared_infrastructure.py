@@ -921,6 +921,10 @@ class str_with_extra( stringlike.StringLike ):
 
         return repr( str( self ) ) + ' /* ' + repr( self._extra ) + ' */'
 
+    def __repr__( self ):
+
+        return str.__repr__( self ) + '/* ' + repr( self._extra ) + ' */'
+
     def get_extra( self ):
 
         return self._extra

@@ -33,6 +33,7 @@ map $scheme://$host:$server_port$uri $redirect_code_{{ redirect_code }}_to_{{ su
     default "";
 
     {% for redirect in redirect_configurations -%}
+    # redirect_code {{ redirect.dst.extra.redirect_code }}
     {% if redirect.dst.extra.redirect_code == redirect_code -%}
     {% if redirect.src.endswith( '/' ) and redirect.src.split( '/' )|length > 4 -%}
     {{ listening_uri_extra.is_case_sensitive( redirect.src.extra ) }}^{{ redirect.src.rstrip( '/' ) }}$ {{ redirect_code }};
