@@ -19,7 +19,7 @@
              "proxy_read_timeout"	:
                           {
                                "type"          : "string",
-                               "enum"          : [ "10s", "60s", "120s" ],
+                               "enum"          : [ "10s", "65s", "125s", "1805s" ],
                                "default"       : "10s"
                           }
         }
