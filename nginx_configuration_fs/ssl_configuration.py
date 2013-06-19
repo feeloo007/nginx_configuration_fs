@@ -395,7 +395,7 @@ class SSLConfiguration():
                 json.dumps(
                     d_configurations,
                     sort_keys   = True,
-                    cls         = shared_infrastructure.DictWithMaskableKeysEncoder,
+                    cls         = shared_infrastructure.SpecificKeysEncoder,
                 )
             ).hexdigest()
 

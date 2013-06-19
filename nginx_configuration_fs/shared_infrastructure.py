@@ -212,7 +212,7 @@ class DictWithMaskableKeys( collections.MutableMapping ):
             )
 
 
-class DictWithMaskableKeysEncoder( json.JSONEncoder ):
+class SpecificKeysEncoder( json.JSONEncoder ):
 
     def default( self, obj ):
         if isinstance( obj, DictWithMaskableKeys ):
@@ -682,7 +682,7 @@ def _get_version_configurations( self, d_configurations ):
             json.dumps(
                 d_configurations,
                 sort_keys   = True,
-                cls         = DictWithMaskableKeysEncoder,
+                cls         = SpecificKeysEncoder,
             )
         ).hexdigest()
 
