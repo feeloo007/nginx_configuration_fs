@@ -29,6 +29,10 @@ from    plone.synchronize       import  synchronized
 
 import 	fuse
 
+import	jsonschema
+
+import stringlike
+
 ########################
 # Gestion de cache plone
 ########################
@@ -53,6 +57,7 @@ cache_container_agnostic_configuration          = {}
 cache_container_ssl_configuration          	= {}
 cache_container_url2entity_configuration          	= {}
 cache_container_nginx_fs                        = {}
+cache_extra_from_distrib                        = {}
 
 
 
@@ -125,6 +130,77 @@ def common_process_uri(
     d[ '%squery' % ( suffixwith ) ]         = d_rfc3987.get( 'query' )
     d[ '%sfragment' % ( suffixwith ) ]      = d_rfc3987.get( 'fragment' )
     d[ '%suserinfo' % ( suffixwith ) ]      = d_rfc3987.get( 'userinfo' )
+
+
+def common_process_extra(
+    le_root_configuration,
+    d,
+    current_line,
+    current_server,
+    current_port,
+    current_mapping_type,
+    l_bad_configurations,
+    le_extra_from_distrib,
+    suffixwith,
+):
+    if 								\
+        d[ '%sextra' % ( suffixwith ) ] is None or		\
+        re.match( '^\s*$', d[ '%sextra' % ( suffixwith ) ] )    \
+        :
+        d[ '%sextra' % ( suffixwith ) ]		= '{}'
+
+    try:
+
+            extra 				= 		\
+                json.loads( d[ '%sextra' % ( suffixwith ) ] )
+
+    except:
+
+        l_bad_configurations.append(
+            (
+                 '%s not a correct json format from %s. Using default value {}' % (
+                     d[ '%sextra' % ( suffixwith ) ],
+                     current_line
+                 ),
+                 le_root_configuration(),
+                 current_server,
+                 current_port,
+                 current_mapping_type
+            )
+        )
+
+        extra					= {}
+
+    try:
+
+        le_extra_from_distrib().get_default_setter_validator(
+            '%sextra' % ( suffixwith )
+        ).validate( extra )
+
+    except Exception, e:
+
+        l_bad_configurations.append(
+            (
+                 '%s not valid json format from %s. %s. Using default value {}' % (
+                     d[ '%sextra' % ( suffixwith ) ],
+                     current_line,
+                     e.message,
+                 ),
+                 le_root_configuration(),
+                 current_server,
+                 current_port,
+                 current_mapping_type
+            )
+        )
+
+        extra					= {}
+
+        le_extra_from_distrib().get_default_setter_validator(
+            None
+        ).validate( extra )
+
+    d[ '%sextra' % ( suffixwith ) ]		= extra
+
 
 def listen_ssl_process_uri(
     le_root_configuration,
@@ -212,11 +288,13 @@ class DictWithMaskableKeys( collections.MutableMapping ):
             )
 
 
-class DictWithMaskableKeysEncoder( json.JSONEncoder ):
+class SpecificKeysEncoder( json.JSONEncoder ):
 
     def default( self, obj ):
         if isinstance( obj, DictWithMaskableKeys ):
           return obj.itervisibleitems()
+        elif isinstance( obj, str_with_extra ):
+          return [ str( obj ), obj.extra ]
         return json.JSONEncoder.default( self, obj )
 
 
@@ -682,7 +760,7 @@ def _get_version_configurations( self, d_configurations ):
             json.dumps(
                 d_configurations,
                 sort_keys   = True,
-                cls         = DictWithMaskableKeysEncoder,
+                cls         = SpecificKeysEncoder,
             )
         ).hexdigest()
 
@@ -823,3 +901,86 @@ def get_last_mtime(
         pattern_port,
         pattern_mapping_type
     )
+
+##################################
+# Derivation de la classe str pour
+# contenir un attribut etra
+##################################
+class str_with_extra( stringlike.StringLike ):
+
+    def __init__( self, value, extra ):
+
+        self._value      = value
+        self._extra      = extra
+
+    def __str__( self ):
+
+        return self._value
+
+    def __repr__( self ):
+
+        return repr( str( self ) ) + ' /* ' + repr( self._extra ) + ' */'
+
+    def __repr__( self ):
+
+        return str.__repr__( self ) + '/* ' + repr( self._extra ) + ' */'
+
+    def get_extra( self ):
+
+        return self._extra
+
+    extra               =               \
+        property(
+            get_extra,
+            None,
+            None,
+        )
+
+###################################
+# Decorator pour faire un singleton
+# tenant compte des parametres de
+# __init__
+###################################
+def Singleton( theClass ):
+    """ decorator for a class to make a singleton out of it """
+
+    classInstances = {}
+
+    def getInstance( *args, **kwargs ):
+        """ creating or just return the one and only class instance.
+            The singleton depends on the parameters used in __init__ """
+
+        key = ( theClass, args, str(kwargs) )
+
+        if key not in classInstances:
+
+            classInstances[ key ] = theClass( *args, **kwargs )
+
+        return classInstances[ key ]
+
+    return getInstance
+
+
+####################################################
+# Class deriavnt de dict et renvoyant un schema
+# par defaut contenatn l'unique regle "de type objet
+# json si la cle n'existe pas
+####################################################
+class dict_with_default_inline_schema( dict ):
+
+    def __getitem__(
+        o,
+        key,
+    ):
+        try:
+           return dict.__getitem__( o, key )
+        except:
+           return                                                               \
+              {
+                  u'$schema'    :                                       \
+                      u'http://json-schema.org/draft-04/schema#',
+                  u'title'      :                                               \
+                      u'default_inline_extra',
+                  u'type'       :                                               \
+                      u'object',
+              }

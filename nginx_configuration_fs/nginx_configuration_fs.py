@@ -31,6 +31,8 @@ import	ssl_configuration
 
 import	url2entity_configuration
 
+import	extra_from_distrib
+
 class NGINXConfigurationFS(LoggingMixIn, Operations):
 
     __L_FORBIDDEN_NAMED_MOUNT_OPTIONS__             = \
@@ -86,6 +88,15 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._ssl_configuration		= ssl_configuration
         self._url2entity_configuration	= url2entity_configuration
         self._url2entity_filename		= url2entity_filename
+
+        self._extra_from_distrib        =                               \
+            extra_from_distrib.ExtraFromDistrib(
+                self._restart_nginx
+            )
+
+        self._extra_from_distrib.register_cache_to_clear(
+            shared_infrastructure.cache_container_nginx_fs
+        )
 
         self._l_bad_configurations	= []
 
@@ -272,6 +283,10 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
 
         self._template_notifier 				= pyinotify.ThreadedNotifier( wm, TemplateEventHandler() )
 
+        self._extra_from_distrib.register_notifier(
+            self._template_notifier
+        )
+
         self._template_notifier.coalesce_events()
 
         add_templates_watches()
@@ -301,8 +316,9 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         return 									\
             len( self.l_bad_configurations ) 				+ 	\
             len( self._agnostic_configuration.l_bad_configurations ) 	+  	\
-            len( self._url2entity_configuration.l_bad_configurations )     +	\
-            len( self._ssl_configuration.l_bad_configurations )			\
+            len( self._url2entity_configuration.l_bad_configurations )  +	\
+            len( self._ssl_configuration.l_bad_configurations )		+	\
+            len( self._extra_from_distrib.l_bad_configurations )		\
             != 0
     have_bad_configurations = property( get_have_bad_configurations, None, None )
 
@@ -601,6 +617,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                 return self.read_map( pattern_server, pattern_port, pattern_mapping_type )
 
             except:
+                import traceback
+                traceback.print_exc()
                 raise FuseOSError( ENOENT )
 
         raise FuseOSError( ENOENT )
@@ -621,7 +639,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             self._agnostic_configuration._root_configuration,
             self._url2entity_configuration._root_configuration,
             self._ssl_configuration._root_ssl_configuration,
-            'FS', 
+            self._extra_from_distrib._root_extras,
+            'FS',
         ]
 
         d_bad = {
@@ -632,7 +651,9 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
            self._ssl_configuration._root_ssl_configuration:
                self._ssl_configuration.l_bad_configurations,
            'FS':
-               self.l_bad_configurations
+               self.l_bad_configurations,
+           self._extra_from_distrib._root_extras:
+               self._extra_from_distrib.l_bad_configurations,
         }
 
         if self.have_bad_configurations:
@@ -747,6 +768,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                             )
                         ]
                     ),
+               extra_from_distrib_configurations	= \
+                   self._extra_from_distrib.d_configurations,
         ).encode( 'utf-8' )
 
 
@@ -828,6 +851,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                         'mappings',
                         []
                     ),
+               extra_from_distrib_configurations	= \
+                   self._extra_from_distrib.d_configurations,
         ).encode( 'utf-8' )
 
 

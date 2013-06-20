@@ -1,3 +1,5 @@
+{% import 'redirected_uri_extra.tpl' as redirected_uri_extra with context %}
+{% import 'backed_uri_extra.tpl' as backed_uri_extra with context %}
 log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_local] "$request" '
                  '$status $body_bytes_sent "$http_referer" '
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
@@ -119,10 +121,20 @@ server {
     {% endif -%}
 
     {% if converted_redirect_map_filename in list_converted_map_filenames %}
-        if ( $redirect_to_{{ suffix_map }} ) {
-            return 		302 	$redirect_to_{{ suffix_map }};
+        {% call( redirect_code ) redirected_uri_extra.loop_on_redirected_code() -%}
+        # Redirect explicite, issue d'une regle redirect utilisant la valeur enumeree = {{ redirect_code }}
+        if ( $redirect_code_{{ redirect_code }}_to_{{ suffix_map }} ) {
+            return 		{{ redirect_code }} 	$redirect_to_{{ suffix_map }};
         }
-    {% else %}
+        {% endcall -%}
+
+        {% call( default_redirected_code ) redirected_uri_extra.default_redirected_code() -%}
+        # redirect implicite, issue d'une regle mount, utilisant la valeur par default = {{ default_redirected_code }}
+        if ( $from_mount_redirect_code_to_{{ suffix_map }} ) {
+            return 		{{ default_redirected_code }} 	$redirect_to_{{ suffix_map }};
+        }
+        {% endcall -%}
+    {% else -%}
         # Pas de configuration redirect pour ce serveur
     {% endif -%}
 
@@ -142,21 +154,31 @@ server {
                                 /__default__/__default__/__default__/__default__/$uri
                                 @backend;
 
-
     {% else %}
         # Pas de configuration mount pour ce serveur
     {% endif -%}
 
     }
     {% if converted_mount_map_filename in list_converted_map_filenames %}
-
     location @backend {
 
-        #proxy_intercept_errors 	on;
-        proxy_buffering on;
+        recursive_error_pages on;
+        {% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() -%}
+        error_page {{ backend_combination[ "index" ] }} = @backend_{{ backend_combination[ "combination" ] }};
+        if ( $backend_{{ backend_combination[ "combination" ] }}_{{ suffix_map }} ) {
+            return {{ backend_combination[ "index" ] }};
+        }
+        {% endcall -%}
+    }
 
-        proxy_connect_timeout       2s;
-        proxy_read_timeout          10s;
+    {% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() %}
+    location @backend_{{ backend_combination[ "combination" ] }} {
+
+        #proxy_intercept_errors 	on;
+        proxy_buffering {{ backend_combination[ "proxy_buffering" ] }};
+
+        proxy_connect_timeout       {{ backend_combination[ "proxy_connect_timeout" ] }};
+        proxy_read_timeout          {{ backend_combination[ "proxy_read_timeout" ] }};
 
         proxy_set_header	Host 		$host:$server_port;
         proxy_set_header    	X-Real-IP       $remote_addr;
@@ -188,6 +210,7 @@ server {
         proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
 
     }
+    {% endcall %}
     {% endif %}
 
 }

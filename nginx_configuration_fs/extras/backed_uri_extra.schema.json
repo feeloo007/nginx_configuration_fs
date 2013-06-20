@@ -1,0 +1,26 @@
+{
+    "$schema"		: "http://json-schema.org/draft-04/schema#",
+    "title"            	: "backed_uri_extra",
+    "type"             	: "object",
+    "properties"    	:
+        {
+             "proxy_buffering"		:
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "on", "off" ],
+                               "default"       : "on"
+                          },
+             "proxy_connect_timeout"	:
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "2s" ],
+                               "default"       : "2s"
+                          },
+             "proxy_read_timeout"	:
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "10s", "65s", "125s", "1805s" ],
+                               "default"       : "10s"
+                          }
+        }
+}
