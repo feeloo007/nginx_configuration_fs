@@ -165,6 +165,14 @@ server {
             return {{ backend_combination[ "index" ] }};
         }
         {% endcall -%}
+
+        {% call( backend_combination ) backed_uri_extra.default_backend_combination() -%}
+        # Si aucun $backend_ n'a matche, c'est que la configuration n'existe pas.
+        # on utilise alors le backend avec toutes le valeurs par defaut qui renverra
+        # l'URL de la page de maintenance (c'est de cette maniere que la page d'erreur
+        # s'affichait avant d'eclater en $backend_
+        return {{ backend_combination[ "index" ] }};
+        {% endcall -%}
     }
 
     {% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() %}
