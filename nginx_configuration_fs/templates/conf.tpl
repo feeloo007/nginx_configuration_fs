@@ -198,8 +198,10 @@ server {
 
         proxy_cookie_domain     $proxy_cookie_domain_to_replace_{{ suffix_map }} $proxy_cookie_domain_replaced_by_{{ suffix_map }};
 
+        {% if backend_combination[ "mapping_symmetry" ] == 'asymmetric' -%}
         proxy_cookie_path       $proxy_cookie_path_to_replace_{{ suffix_map }} $proxy_cookie_path_replaced_by_{{ suffix_map }};
         proxy_cookie_path       $proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }} $proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }};
+        {% endif -%}
 
         if ( $not_resolved_backend_{{ suffix_map }} ) {
             set $not_resolved_backend_name not_resolved_backend_{{ suffix_map }};

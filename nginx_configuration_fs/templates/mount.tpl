@@ -43,7 +43,12 @@ map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_with_port_{{ suf
     default 	"";
 
     {% for mount in mount_configurations -%}
+    {% if mount.dst.extra.mapping_symmetry == 'asymmetric' -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.proxy_redirect_to_replace_with_port }};
+    {% elif  mount.dst.extra.mapping_symmetry == 'symmetric' -%}
+    # ATTENTION : mapping_symmetry == symmetric, la location indiquee dans le fichier de configuration pourt la destination est remplacee par celle de la source
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.proxy_redirect_to_replace_with_port_for_symmetric_mapping }};
+    {% endif -%}
     {% endfor -%}
 
 }
@@ -53,7 +58,12 @@ map $scheme://$host:$server_port$uri $proxy_redirect_to_replace_without_port_{{ 
     default 	"";
 
     {% for mount in mount_configurations -%}
+    {% if mount.dst.extra.mapping_symmetry == 'asymmetric' -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.proxy_redirect_to_replace_without_port }};
+    {% elif  mount.dst.extra.mapping_symmetry == 'symmetric' -%}
+    # ATTENTION : mapping_symmetry == symmetric, la location indiquee dans le fichier de configuration pourt la destination est remplacee par celle de la source
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.proxy_redirect_to_replace_without_port_for_symmetric_mapping }};
+    {% endif -%}
     {% endfor -%}
 
 }
@@ -63,7 +73,12 @@ map $scheme://$host:$server_port$uri $prxfied_and_prefix_uri_{{ suffix_map }} {
     default 	"";
 
     {% for mount in mount_configurations -%}
+    {% if mount.dst.extra.mapping_symmetry == 'asymmetric' -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^(?<captured>{{ mount.src }}).*$	$captured;
+    {% elif  mount.dst.extra.mapping_symmetry == 'symmetric' -%}
+    # ATTENTION : mapping_symmetry == symmetric, la location indiquee dans le fichier de configuration pourt la destination est remplacee par celle de la source
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }}.*$			{{ mount.src }};
+    {% endif -%}
     {% endfor -%}
 
 }

@@ -171,6 +171,17 @@ class AgnosticConfiguration(
             uri 	+= d[ 'dst_path' ] or ''
             return uri
 
+        def get_proxy_redirect_to_replace_url_with_port_for_symmetric_mapping( d ):
+            uri 	= ''
+            uri 	+= d[ 'dst_scheme' ] + ':'
+            uri 	+= '//'
+            if  d.get( 'dst_userinfo' ):
+                uri 	+= d[ 'dst_userinfo' ] + '@'
+            uri 	+= d[ 'src_host' ]
+            uri 	+= ':%s' % ( d[ 'dst_port' ] )
+            uri 	+= d[ 'src_path' ] or ''
+            return uri
+
         def get_proxy_redirect_to_replace_url_without_port( d ):
             uri 	= ''
             uri 	+= d[ 'dst_scheme' ] + ':'
@@ -179,6 +190,16 @@ class AgnosticConfiguration(
                 uri 	+= d[ 'dst_userinfo' ] + '@'
             uri 	+= d[ 'src_host' ]
             uri 	+= d[ 'dst_path' ] or ''
+            return uri
+
+        def get_proxy_redirect_to_replace_url_without_port_for_symmetric_mapping( d ):
+            uri 	= ''
+            uri 	+= d[ 'dst_scheme' ] + ':'
+            uri 	+= '//'
+            if  d.get( 'dst_userinfo' ):
+                uri 	+= d[ 'dst_userinfo' ] + '@'
+            uri 	+= d[ 'src_host' ]
+            uri 	+= d[ 'src_path' ] or ''
             return uri
 
         AgnosticConfiguration.add_to_configuration( 
@@ -228,8 +249,12 @@ class AgnosticConfiguration(
                             get_ips_for_upstream( d[ 'dst_host' ] ),
                         'proxy_redirect_to_replace_with_port':
                             get_proxy_redirect_to_replace_url_with_port( d ),
+                        'proxy_redirect_to_replace_with_port_for_symmetric_mapping':
+                            get_proxy_redirect_to_replace_url_with_port_for_symmetric_mapping( d ),
                         'proxy_redirect_to_replace_without_port':
                             get_proxy_redirect_to_replace_url_without_port( d ),
+                        'proxy_redirect_to_replace_without_port_for_symmetric_mapping':
+                            get_proxy_redirect_to_replace_url_without_port_for_symmetric_mapping( d ),
                     }, 
             d_configurations,
             filepath,
