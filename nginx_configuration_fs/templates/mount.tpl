@@ -142,13 +142,15 @@ map $scheme://$host:$server_port$uri $backend_{{ backend_combination[ "combinati
     default     "";
 
     {% for mount in mount_configurations -%}
-    # pb {{ mount.dst.extra.proxy_buffering }} pct {{ mount.dst.extra.proxy_connect_timeout }} prt {{ mount.dst.extra.proxy_read_timeout }}
+    # pb {{ mount.dst.extra.proxy_buffering }} pct {{ mount.dst.extra.proxy_connect_timeout }} prt {{ mount.dst.extra.proxy_read_timeout }} ms {{ mount.dst.extra.mapping_symmetry }}
     {% if
           mount.dst.extra.proxy_buffering 		== backend_combination[ "proxy_buffering" ]
           and
           mount.dst.extra.proxy_connect_timeout 	== backend_combination[ "proxy_connect_timeout" ]
           and
           mount.dst.extra.proxy_read_timeout 		== backend_combination[ "proxy_read_timeout" ]
+          and
+          mount.dst.extra.mapping_symmetry 		== backend_combination[ "mapping_symmetry" ]
     -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ backend_combination[ "index" ] }};
     {% else -%}
