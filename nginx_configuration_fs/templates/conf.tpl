@@ -202,8 +202,10 @@ server {
 
         proxy_cookie_domain     $proxy_cookie_domain_to_replace_{{ suffix_map }} $proxy_cookie_domain_replaced_by_{{ suffix_map }};
 
+        {% if backend_combination[ "mapping_symmetry" ] == 'asymmetric' -%}
         proxy_cookie_path       $proxy_cookie_path_to_replace_{{ suffix_map }} $proxy_cookie_path_replaced_by_{{ suffix_map }};
         proxy_cookie_path       $proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }} $proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }};
+        {% endif -%}
 
         if ( $not_resolved_backend_{{ suffix_map }} ) {
             set $not_resolved_backend_name not_resolved_backend_{{ suffix_map }};
@@ -212,10 +214,17 @@ server {
             set $not_resolved_backend_resolved_url $scheme://$host:$server_port$uri;
             return 		418;
         }
+        {% if backend_combination[ "mapping_symmetry" ] == 'asymmetric' -%}
         if ( $added_query_string_{{ suffix_map }} ) {
-            proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
+            proxy_pass     	$contextualized_upstream_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
         }
-        proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+        proxy_pass     	$contextualized_upstream_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+        {% elif backend_combination[ "mapping_symmetry" ] == 'symmetric' -%}
+        if ( $added_query_string_{{ suffix_map }} ) {
+            proxy_pass     	$contextualized_upstream_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
+        }
+        proxy_pass     	$contextualized_upstream_{{ suffix_map }}$query_string;
+        {% endif -%}
 
     }
     {% endcall %}
