@@ -12,11 +12,16 @@ map $scheme://$host:$server_port$uri $not_resolved_backend_{{ suffix_map }} {
 
 }
 
-map $scheme://$host:$server_port$uri $upstream_and_prefix_uri_{{ suffix_map }} {
+map $scheme://$host:$server_port$uri $contextualized_upstream_{{ suffix_map }} {
 
     default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/__NO_CONFIGURATION__.html;
     {% for mount in mount_configurations -%}
+    {% if mount.dst.extra.mapping_symmetry == 'asymmetric' -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_upstream }};
+    {% elif  mount.dst.extra.mapping_symmetry == 'symmetric' -%}
+    # ATTENTION : mapping_symmetry == symmetric, la location indiquee dans le fichier de configuration pourt la destination est remplacee par celle de la source
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_upstream_for_symmetric_mapping }};
+    {% endif -%}
     {% endfor -%}
 
 }

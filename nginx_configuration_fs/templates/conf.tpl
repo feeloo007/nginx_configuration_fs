@@ -208,10 +208,17 @@ server {
             set $not_resolved_backend_resolved_url $scheme://$host:$server_port$uri;
             return 		418;
         }
+        {% if backend_combination[ "mapping_symmetry" ] == 'asymmetric' -%}
         if ( $added_query_string_{{ suffix_map }} ) {
-            proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
+            proxy_pass     	$contextualized_upstream_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
         }
-        proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+        proxy_pass     	$contextualized_upstream_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+        {% elif backend_combination[ "mapping_symmetry" ] == 'symmetric' -%}
+        if ( $added_query_string_{{ suffix_map }} ) {
+            proxy_pass     	$contextualized_upstream_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
+        }
+        proxy_pass     	$contextualized_upstream_{{ suffix_map }}$query_string;
+        {% endif -%}
 
     }
     {% endcall %}
