@@ -151,6 +151,14 @@ class AgnosticConfiguration(
             uri += d[ 'dst_path' ] or ''
             return uri
 
+        def get_upstream_for_symmetric_mapping( d ):
+            uri = ''
+            uri += d[ 'dst_scheme' ] + ':'
+            uri += '//'
+            if  d.get( 'dst_userinfo' ):
+                uri += d[ 'dst_userinfo' ] + '@'
+            uri += get_upstream_name( d )
+            return uri
 
         def get_proxy_redirect_to_replace_url_with_port( d ):
             uri 	= ''
@@ -214,6 +222,8 @@ class AgnosticConfiguration(
                             get_upstream_name( d ),
                         'dst_upstream':
                             get_upstream_url( d ),
+                        'dst_upstream_for_symmetric_mapping':
+                            get_upstream_for_symmetric_mapping( d ),
                         'dst_upstream_resolved_ips':
                             get_ips_for_upstream( d[ 'dst_host' ] ),
                         'proxy_redirect_to_replace_with_port':
