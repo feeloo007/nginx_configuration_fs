@@ -21,6 +21,12 @@
                                "type"          : "string",
                                "enum"          : [ "10s", "65s", "125s", "1805s" ],
                                "default"       : "10s"
+                          },
+             "mapping_symmetry"	:
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "symmetric", "asymmetric" ],
+                               "default"       : "asymmetric"
                           }
         }
 }
