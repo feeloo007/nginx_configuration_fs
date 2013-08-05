@@ -216,10 +216,11 @@ server {
         }
         proxy_pass     	$contextualized_upstream_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
         {% elif backend_combination[ "mapping_symmetry" ] == 'symmetric' -%}
-        if ( $added_query_string_{{ suffix_map }} ) {
-            proxy_pass     	$contextualized_upstream_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
-        }
-        proxy_pass     	$contextualized_upstream_{{ suffix_map }}$query_string;
+        #if ( $added_query_string_{{ suffix_map }} ) {
+        # Non utilisable si le montage est symetrique
+        #    proxy_pass     	$contextualized_upstream_{{ suffix_map }};
+        #}
+        proxy_pass     	$contextualized_upstream_{{ suffix_map }};
         {% endif -%}
 
     }
