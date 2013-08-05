@@ -4,6 +4,10 @@ log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_lo
                  '$status $body_bytes_sent "$http_referer" '
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
 
+log_format backend_failed_{{ server }}-{{ port }} '$remote_addr [$time_local] '
+                 '$status $body_bytes_sent $request_time "$scheme://$host:$server_port$request_uri" '
+                 '"$http_referer"';
+
 {% for upstream in upstream_configuration -%}
 {% if not upstream.ips -%}
 # IMPOSSIBLE DE RESOUDRE {{ upstream.host }} POUR {{ upstream.name }}
@@ -62,6 +66,8 @@ server {
 
         location = /__BACKEND_FAILED__.html {
             internal;
+
+            access_log  /var/log/nginx/.{{ server }}-{{ port }}.backend_failed.log backend_failed_{{ server }}-{{ port }};
 
             try_files 	/{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
                         /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
