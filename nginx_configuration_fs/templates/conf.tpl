@@ -62,6 +62,13 @@ server {
 
         root /home/z00_www_static/;
 
+
+        location = /{{ random_id( 12 ) }}__STATUS__{{ random_id( 12 ) }} {
+
+            stub_status on;
+
+        }
+
         location = /__BACKEND_FAILED__.html {
             internal;
 
