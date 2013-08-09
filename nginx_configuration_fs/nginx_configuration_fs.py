@@ -770,6 +770,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                     ),
                extra_from_distrib_configurations	= \
                    self._extra_from_distrib.d_configurations,
+               random_id	= 				\
+                   shared_infrastructure.random_id,
         ).encode( 'utf-8' )
 
 
