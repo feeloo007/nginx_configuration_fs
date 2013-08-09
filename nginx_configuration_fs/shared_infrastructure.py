@@ -33,6 +33,11 @@ import	jsonschema
 
 import stringlike
 
+import 	random
+
+import 	string
+
+
 ########################
 # Gestion de cache plone
 ########################
@@ -984,3 +989,13 @@ class dict_with_default_inline_schema( dict ):
                   u'type'       :                                               \
                       u'object',
               }
+
+
+#########################################################
+# Caracteres utilsables pour generer une chaine aleatoire
+# pour definir la ressource status de nginx
+#########################################################
+letters         = string.ascii_letters+string.digits
+
+def random_id( size ):
+    return ''.join( [random.choice(letters) for _ in range( size ) ] )
