@@ -651,16 +651,12 @@ class AgnosticConfiguration(
                     continue
 
             # Recherche des ports
-            for port in [ 
-                         p
-                         for p
-                         in os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server )
-                      ]:
+            for port in os.listdir( self._root_configuration.rstrip( os.sep ) + os.sep + server ):
 
                 # Si le repertoire ne correspond pas au format d'un nom de port
                 # la configuration n'est pas prise en compte
                 try:
-                    if not( re.match( '\d{1,5}', port ) and int( p ) <= 65535 ):
+                    if not( re.match( '\d{1,5}', port ) and int( port ) <= 65535 ):
                         raise Exception()
                 except:
                         l_bad_configurations.append( ( '%s unvalid port format' % ( port ), self._root_configuration, server, port ) )
