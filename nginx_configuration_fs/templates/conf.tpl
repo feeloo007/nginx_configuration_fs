@@ -8,6 +8,29 @@ log_format backend_failed_{{ server }}-{{ port }} '$remote_addr [$time_local] '
                  '$status $body_bytes_sent $request_time "$scheme://$host:$server_port$request_uri" '
                  '"$http_referer"';
 
+log_format location_debug_{{ server }}-{{ port }} '######################\n'
+		 'request_uri=$request_uri\n'
+		 'uri=$uri\n'
+		 'not_resolved_backend=$not_resolved_backend_{{ suffix_map }}\n'
+		 'contextualized_upstream=$contextualized_upstream_{{ suffix_map }}\n'
+		 'added_query_string=$added_query_string_{{ suffix_map }}\n'
+		 'proxy_redirect_to_replace_with_port=$proxy_redirect_to_replace_with_port_{{ suffix_map }}\n'
+		 'proxy_redirect_to_replace_without_port=$proxy_redirect_to_replace_without_port_{{ suffix_map }}\n'
+		 'prxfied_and_prefix_uri=$prxfied_and_prefix_uri_{{ suffix_map }}\n'
+		 'suffix_uri=$suffix_uri_{{ suffix_map }}\n'
+		 'proxy_cookie_domain_to_replace=$proxy_cookie_domain_to_replace_{{ suffix_map }}\n'
+		 'proxy_cookie_domain_replaced_by=$proxy_cookie_domain_replaced_by_{{ suffix_map }}\n'
+		 'proxy_cookie_path_to_replace=$proxy_cookie_path_to_replace_{{ suffix_map }}\n'
+		 'proxy_cookie_path_to_replace_without_suffixed_slash=$proxy_cookie_path_to_replace_without_suffixed_slash_{{ suffix_map }}\n'
+		 'proxy_cookie_path_replaced_by=$proxy_cookie_path_replaced_by_{{ suffix_map }}\n'
+		 'proxy_cookie_path_replaced_by_for_without_suffixed_slash=$proxy_cookie_path_replaced_by_for_without_suffixed_slash_{{ suffix_map }}\n'
+		 'redirect_to=$redirect_to_{{ suffix_map }}\n'
+		 'from_mount_redirect_code_to=$from_mount_redirect_code_to_{{ suffix_map }}\n'
+		 'not_mapped=$not_mapped_{{ suffix_map }}\n'
+		 'url_2_entity=$url_2_entity_{{ suffix_map }}\n' ;
+
+
+
 {% for upstream in upstream_configuration -%}
 {% if not upstream.ips -%}
 # IMPOSSIBLE DE RESOUDRE {{ upstream.host }} POUR {{ upstream.name }}
@@ -48,6 +71,7 @@ server {
     access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
+    access_log 			/var/log/nginx/.{{ server }}-{{ port }}.location_debug.log location_debug_{{ server }}-{{ port }};
 
     error_page                  404     =404       /__NO_CONFIGURATION__.html;
     error_page                  502     =503       /__BACKEND_FAILED__.html;
