@@ -148,7 +148,6 @@ class AgnosticConfiguration(
             if  d.get( 'dst_userinfo' ):
                 uri += d[ 'dst_userinfo' ] + '@'
             uri += get_upstream_name( d )
-            uri += d[ 'dst_path' ] or ''
             return uri
 
 

@@ -1,6 +1,6 @@
 {% import 'listening_uri_extra.tpl' as listening_uri_extra %}
 {% import 'redirected_uri_extra.tpl' as redirected_uri_extra with context %}
-map $scheme://$host:$server_port$uri $redirect_to_{{ suffix_map }} {
+map $scheme://$host:$server_port$original_uri $redirect_to_{{ suffix_map }} {
 
     default "";
  
@@ -28,7 +28,7 @@ map $scheme://$host:$server_port$uri $redirect_to_{{ suffix_map }} {
 
 # REDIRECTS EXPLICITES BASES SUR redirect
 {% call( redirect_code ) redirected_uri_extra.loop_on_redirected_code() -%}
-map $scheme://$host:$server_port$uri $redirect_code_{{ redirect_code }}_to_{{ suffix_map }} {
+map $scheme://$host:$server_port$original_uri $redirect_code_{{ redirect_code }}_to_{{ suffix_map }} {
 
     default "";
 
@@ -51,7 +51,7 @@ map $scheme://$host:$server_port$uri $redirect_code_{{ redirect_code }}_to_{{ su
 
 # REDIRECTS IMPLICITES BASES SUR mount
 {% call( default_redirected_code ) redirected_uri_extra.default_redirected_code() -%}
-map $scheme://$host:$server_port$uri $from_mount_redirect_code_to_{{ suffix_map }} {
+map $scheme://$host:$server_port$original_uri $from_mount_redirect_code_to_{{ suffix_map }} {
 
     default "";
 
