@@ -4,6 +4,10 @@ log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_lo
                  '$status $body_bytes_sent "$http_referer" '
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
 
+log_format backend_failed_{{ server }}-{{ port }} '$remote_addr [$time_local] '
+                 '$status $body_bytes_sent $request_time "$scheme://$host:$server_port$request_uri" '
+                 '"$http_referer"';
+
 {% for upstream in upstream_configuration -%}
 {% if not upstream.ips -%}
 # IMPOSSIBLE DE RESOUDRE {{ upstream.host }} POUR {{ upstream.name }}
@@ -58,10 +62,21 @@ server {
 
     location / {
 
+        set $original_uri $uri;
+
         root /home/z00_www_static/;
+
+
+        location = /{{ random_id( 12 ) }}__STATUS__{{ random_id( 12 ) }} {
+
+            stub_status on;
+
+        }
 
         location = /__BACKEND_FAILED__.html {
             internal;
+
+            access_log  /var/log/nginx/.{{ server }}-{{ port }}.backend_failed.log backend_failed_{{ server }}-{{ port }};
 
             try_files 	/{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
                         /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
@@ -140,18 +155,20 @@ server {
 
     {% if converted_mount_map_filename in list_converted_map_filenames %}
 
+        rewrite  ^      $prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }} break;
+
         # Construction permettant d'utiliser location @backend et de servir les pages d'erreurs
         # Si $uri = egal une page d'erreur, c'est la page d'erreur qui est servie
-        try_files               /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$uri
-                                /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$uri
-                                /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/$host/$uri
-                                /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/__default__/$uri
-                                /{{server}}/{{port}}/__default__/$host/$uri
-                                /{{server}}/{{port}}/__default__/__default__/$uri
-                                /{{server}}/__default__/__default__/$host/$uri
-                                /{{server}}/__default__/__default__/__default__/$uri
-                                /__default__/__default__/__default__/$host/$uri
-                                /__default__/__default__/__default__/__default__/$uri
+        try_files               /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/$host/$original_uri
+                                /{{server}}/{{port}}/$url_2_entity_{{ suffix_map }}/__default__/$original_uri
+                                /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/$host/$original_uri
+                                /{{server}}/__default__/$url_2_entity_{{ suffix_map }}/__default__/$original_uri
+                                /{{server}}/{{port}}/__default__/$host/$original_uri
+                                /{{server}}/{{port}}/__default__/__default__/$original_uri
+                                /{{server}}/__default__/__default__/$host/$original_uri
+                                /{{server}}/__default__/__default__/__default__/$original_uri
+                                /__default__/__default__/__default__/$host/$original_uri
+                                /__default__/__default__/__default__/__default__/$original_uri
                                 @backend;
 
     {% else %}
@@ -212,10 +229,14 @@ server {
             set $not_resolved_backend_resolved_url $scheme://$host:$server_port$uri;
             return 		418;
         }
+
         if ( $added_query_string_{{ suffix_map }} ) {
-            proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$added_query_string_{{ suffix_map }}&$query_string;
+
+            rewrite ^  $uri?$added_query_string_{{ suffix_map }} break;
+
         }
-        proxy_pass     	$upstream_and_prefix_uri_{{ suffix_map }}$suffix_uri_{{ suffix_map }}?$query_string;
+
+        proxy_pass     	$upstream_{{ suffix_map }};
 
     }
     {% endcall %}
@@ -250,7 +271,7 @@ include {{ root_nginx_configuration }}{{ converted_url2entity_map_filename }};
 {% else -%}
 # Pas de map url2entity pour ce serveur
 # Creation d'une map par defaut
-map $scheme://$host:$server_port$uri $url_2_entity_{{ suffix_map }} {
+map $scheme://$host:$server_port$original_uri $url_2_entity_{{ suffix_map }} {
 
     default     "__default__";
 

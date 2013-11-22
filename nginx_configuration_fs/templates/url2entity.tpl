@@ -1,5 +1,5 @@
 {% import 'listening_uri_extra.tpl' as listening_uri_extra %}
-map $scheme://$host:$server_port$uri $url_2_entity_{{ suffix_map }} {
+map $scheme://$host:$server_port$original_uri $url_2_entity_{{ suffix_map }} {
 
     default     "__default__";
 
