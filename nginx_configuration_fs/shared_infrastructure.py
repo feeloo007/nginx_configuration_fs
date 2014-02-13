@@ -121,7 +121,22 @@ def common_process_uri(
         uri += d_rfc3987[ 'userinfo' ] + '@'
     uri += d_rfc3987[ 'host' ]
     uri += ':%s' % ( d_rfc3987[ 'port' ] )
-    uri += d_rfc3987[ 'path' ] or ''
+
+    if not d_rfc3987[ 'path' ]:
+        l_bad_configurations.append(
+            (
+                 '%s is not valid on internet from %s. Using default value /' % (
+                     uri,
+                     current_line
+                 ),
+                 le_root_configuration(),
+                 current_server,
+                 current_port,
+                 current_mapping_type
+            )
+        )
+    uri += d_rfc3987[ 'path' ] or '/'
+
     if  d_rfc3987.get( 'query' ):
         uri += '?' + d_rfc3987[ 'query' ]
     if  d_rfc3987.get( 'fragment' ):
@@ -131,7 +146,7 @@ def common_process_uri(
     d[ '%sscheme' % ( suffixwith ) ]        = d_rfc3987[ 'scheme' ]
     d[ '%shost' % ( suffixwith ) ]          = d_rfc3987[ 'host' ]
     d[ '%sport' % ( suffixwith ) ]          = d_rfc3987[ 'port' ]
-    d[ '%spath' % ( suffixwith ) ]          = d_rfc3987[ 'path' ]
+    d[ '%spath' % ( suffixwith ) ]          = d_rfc3987[ 'path' ] or '/'
     d[ '%squery' % ( suffixwith ) ]         = d_rfc3987.get( 'query' )
     d[ '%sfragment' % ( suffixwith ) ]      = d_rfc3987.get( 'fragment' )
     d[ '%suserinfo' % ( suffixwith ) ]      = d_rfc3987.get( 'userinfo' )
