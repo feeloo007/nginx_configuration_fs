@@ -21,6 +21,15 @@ map $scheme://$host:$server_port$original_uri $upstream_{{ suffix_map }} {
 
 }
 
+map $scheme://$host:$server_port$original_uri $not_mounted_{{ suffix_map }} {
+
+    default 	"YES";
+    {% for mount in mount_configurations -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} "";
+    {% endfor -%}
+
+}
+
 map $scheme://$host:$server_port$original_uri $prefix_uri_{{ suffix_map }} {
 
     default 	"";

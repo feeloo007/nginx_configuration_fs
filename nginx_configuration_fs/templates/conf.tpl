@@ -230,6 +230,18 @@ server {
             return 		418;
         }
 
+        # Conditions remplies dans ce bloc :
+        # La ressource n'est pas dans unmount
+        # La ressource n'est pas dans redirect
+        # La ressource n'a pas ete trouvee localement sur nginx
+        # On teste donc sir la ressource n'est pas non plus montee
+        # Si la ressource n'est pas montee, c'est qu'elle n'existe pas
+        # On utilise donc return qui contrairement a proxy_passs conserve la valeur
+        # de $original_uri
+        if ( $not_mounted_{{ suffix_map }} ) {
+            return 		404;
+        }
+
         if ( $added_query_string_{{ suffix_map }} ) {
 
             rewrite ^  $uri?$added_query_string_{{ suffix_map }} break;
@@ -276,5 +288,4 @@ map $scheme://$host:$server_port$original_uri $url_2_entity_{{ suffix_map }} {
     default     "__default__";
 
 }
-
 {% endif -%}
