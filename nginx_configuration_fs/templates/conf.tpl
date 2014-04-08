@@ -208,7 +208,9 @@ server {
         proxy_hide_header   	X-Powered-By;
 
         proxy_http_version              1.1;
-        proxy_set_header Connection     "";
+
+        proxy_set_header 	Upgrade $http_upgrade;
+        proxy_set_header 	Connection $connection_upgrade_{{ suffix_map }};
 
         proxy_redirect 		$proxy_redirect_to_replace_with_port_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
         proxy_redirect 		$proxy_redirect_to_replace_without_port_{{ suffix_map }} $prxfied_and_prefix_uri_{{ suffix_map }};
@@ -281,3 +283,10 @@ map $scheme://$host:$server_port$original_uri $url_2_entity_{{ suffix_map }} {
 
 }
 {% endif -%}
+
+map $http_upgrade $connection_upgrade_{{ suffix_map }} {
+
+    default     upgrade;
+    ''          '';
+
+}
