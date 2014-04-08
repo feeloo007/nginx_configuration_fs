@@ -43,6 +43,13 @@ server {
     {% if ssl_configuration -%}
     ssl_certificate 		{{ ssl_configuration.ssl_certificate_filepath }};
     ssl_certificate_key		{{ ssl_configuration.ssl_certificate_key_filepath }};
+
+    ssl_session_cache shared:SSL:1m;
+    ssl_session_timeout  5m;
+
+    ssl_ciphers  HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers   on;
+
     {% endif -%}
 
     access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
