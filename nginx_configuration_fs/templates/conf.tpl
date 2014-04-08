@@ -43,6 +43,13 @@ server {
     {% if ssl_configuration -%}
     ssl_certificate 		{{ ssl_configuration.ssl_certificate_filepath }};
     ssl_certificate_key		{{ ssl_configuration.ssl_certificate_key_filepath }};
+
+    ssl_session_cache shared:SSL:1m;
+    ssl_session_timeout  5m;
+
+    ssl_ciphers  HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers   on;
+
     {% endif -%}
 
 {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
