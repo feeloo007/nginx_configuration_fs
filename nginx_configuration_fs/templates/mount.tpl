@@ -16,7 +16,7 @@ map $scheme://$host:$server_port$original_uri $upstream_{{ suffix_map }} {
 
     default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/__NO_CONFIGURATION__.html;
     {% for mount in mount_configurations -%}
-    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_upstream }};
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_upstream }}_with_connect_defined_to_;
     {% endfor -%}
 
 }
@@ -189,6 +189,15 @@ map $scheme://$host:$server_port$original_uri $proxy_cookie_path_replaced_by_for
     {% endif -%}
     {% endfor -%}
 
+}
+
+map $scheme://$host:$server_port$original_uri $connection_{{ suffix_map }} {
+
+    default     "{{ extra_from_distrib_configurations.backed_uri_extra.properties.client_http_connect.default }}";
+
+    {% for mount in mount_configurations -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} "{{ mount.dst.extra.client_http_connect }}";
+    {% endfor -%}
 }
 
 {% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() -%}

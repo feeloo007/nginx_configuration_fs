@@ -14,14 +14,17 @@ log_format backend_failed_{{ server }}-{{ port }} '$remote_addr [$time_local] '
 # TODO - IMPLEMENTER UN SERVEUR TECHNIQUE INDIQUANT QUE LE DNS N'EST PAS RESOLVABLE
 
 {% else %}
-upstream {{ upstream.name }} {
+{% for client_http_connect in extra_from_distrib_configurations.backed_uri_extra.properties.client_http_connect.enum %}
+upstream {{ upstream.name }}_with_connect_defined_to_{{ client_http_connect }} {
     # resolution de {{ upstream.name }} valide au rafraichissement de FS
     {% for ip in upstream.ips -%}
     server {{ ip }}:{{ upstream.port }};
     {% endfor -%}
+    {% if client_http_connect == "" -%}
     keepalive 16;
+    {% endif -%}
 }
-
+{%endfor -%}
 {% endif -%}
 {% endfor -%}
 
@@ -257,7 +260,7 @@ server {
 
         }
 
-        proxy_pass     	$upstream_{{ suffix_map }};
+        proxy_pass     	$upstream_{{ suffix_map }}$connection_{{ suffix_map }};
 
     }
     {% endcall %}
@@ -302,6 +305,6 @@ map $scheme://$host:$server_port$original_uri $url_2_entity_{{ suffix_map }} {
 map $http_upgrade $connection_upgrade_{{ suffix_map }} {
 
     default     upgrade;
-    ''          '';
+    ''          $connection_{{ suffix_map }};
 
 }

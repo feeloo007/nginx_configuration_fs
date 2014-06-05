@@ -21,6 +21,12 @@
                                "type"          : "string",
                                "enum"          : [ "10s", "65s", "125s", "1805s" ],
                                "default"       : "10s"
+                          },
+             "client_http_connect"	:
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "", "close" ],
+                               "default"       : ""
                           }
         }
 }
