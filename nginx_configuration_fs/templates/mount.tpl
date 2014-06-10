@@ -65,6 +65,8 @@ map $scheme://$host:$server_port$original_uri $added_query_string_{{ suffix_map 
     {% for mount in mount_configurations -%}
     {% if mount.dst_query -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_query }};
+    {% else %}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} "";
     {% endif -%}
     {% endfor %}
 
