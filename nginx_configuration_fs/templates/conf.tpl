@@ -217,6 +217,11 @@ server {
         proxy_set_header        X-Forwarded-Proto {% if ssl_configuration %}https{% else %}http{% endif -%};
         proxy_hide_header   	X-Powered-By;
 
+	proxy_set_header	X-MDP-NEW-HTTP-HOST				$mdp_service_redirector_new_http_host_{{ suffix_map }};
+	proxy_set_header	X-MDP-NEW-HTTP-HOST-REDIRECTED-HTTP-CODE	$mdp_service_redirector_new_http_host_http_redirected_code_{{ suffix_map }};
+	proxy_set_header	X-MDP-NEW-HTTP-HOST-REDIRECTED-HTTP-PROTO	$mdp_service_redirector_new_http_host_http_redirected_proto_{{ suffix_map }};
+	proxy_set_header	X-MDP-NEW-HTTP-HOST-REDIRECTED-HTTP-PORT	$mdp_service_redirector_new_http_host_http_redirected_port_{{ suffix_map }};
+
         proxy_http_version              1.1;
 
         proxy_set_header 	Upgrade $http_upgrade;

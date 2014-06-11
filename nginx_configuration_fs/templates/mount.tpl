@@ -202,6 +202,66 @@ map $scheme://$host:$server_port$original_uri $connection_{{ suffix_map }} {
     {% endfor -%}
 }
 
+map $scheme://$host:$server_port$original_uri $mdp_service_redirector_new_http_host_{{ suffix_map }} {
+
+    default     "{{ extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host.default }}";
+
+    {% for mount in mount_configurations -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} "{{ mount.dst.extra.mdp_service_redirector_new_http_host }}";
+    {% endfor -%}
+}
+
+map $mdp_service_redirector_new_http_host_{{ suffix_map }} $mdp_service_redirector_new_http_host_http_redirected_code_{{ suffix_map }} {
+
+    default     $mdp_service_redirector_new_http_host_http_redirected_code_ACTIVATED_{{ suffix_map }};
+
+    ""		"";
+
+}
+
+map $scheme://$host:$server_port$original_uri $mdp_service_redirector_new_http_host_http_redirected_code_ACTIVATED_{{ suffix_map }} {
+
+    default     "{{ extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_code.default }}";
+
+    {% for mount in mount_configurations -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_code }};
+    {% endfor -%}
+}
+
+map $mdp_service_redirector_new_http_host_{{ suffix_map }} $mdp_service_redirector_new_http_host_http_redirected_port_{{ suffix_map }} {
+
+    default     $mdp_service_redirector_new_http_host_http_redirected_port_ACTIVATED_{{ suffix_map }};
+
+    ""		"";
+
+}
+
+map $scheme://$host:$server_port$original_uri $mdp_service_redirector_new_http_host_http_redirected_port_ACTIVATED_{{ suffix_map }} {
+
+    default     {% if extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_port.default == 'same' -%}$server_port{% else -%}"{{ extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_port.default }}"{% endif -%};
+
+    {% for mount in mount_configurations -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {% if mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_port == 'same' -%}$server_port{% else -%}"{{ mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_port }}"{% endif -%};
+    {% endfor -%}
+}
+
+map $mdp_service_redirector_new_http_host_{{ suffix_map }} $mdp_service_redirector_new_http_host_http_redirected_proto_{{ suffix_map }} {
+
+    default     $mdp_service_redirector_new_http_host_http_redirected_proto_ACTIVATED_{{ suffix_map }};
+
+    ""		"";
+
+}
+
+map $scheme://$host:$server_port$original_uri $mdp_service_redirector_new_http_host_http_redirected_proto_ACTIVATED_{{ suffix_map }} {
+
+    default     {% if extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_proto.default == 'same' -%}$scheme{% else -%}"{{ extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_proto.default }}"{% endif -%};
+
+    {% for mount in mount_configurations -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {% if mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_proto == 'same' -%}$scheme{% else -%}"{{ mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_proto }}"{% endif -%};
+    {% endfor -%}
+}
+
 {% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() -%}
 map $scheme://$host:$server_port$original_uri $backend_{{ backend_combination[ "combination" ] }}_{{ suffix_map }} {
 

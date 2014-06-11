@@ -27,6 +27,28 @@
                                "type"          : "string",
                                "enum"          : [ "", "close" ],
                                "default"       : ""
+                          },
+             "mdp_service_redirector_new_http_host"				:
+                          {
+                               "type"          : "string",
+                               "default"       : ""
+                          },
+             "mdp_service_redirector_new_http_host_http_redirected_code"    :
+                          {
+                               "type"          : "number",
+                               "enum"          : [ 301, 302 ],
+                               "default"       : 302
+                          },
+             "mdp_service_redirector_new_http_host_http_redirected_port"    :
+                          {
+                               "type"          : "number",
+                               "default"       : "same"
+                          },
+             "mdp_service_redirector_new_http_host_http_redirected_proto"    :
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "http", "https", "same" ],
+                               "default"       : "same"
                           }
         }
 }
