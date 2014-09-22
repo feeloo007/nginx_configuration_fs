@@ -751,6 +751,12 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                                     d[ 'dst_port' ],
                                 'ips':
                                     d[ 'dst_upstream_resolved_ips' ],
+                                'reversed_ips':
+                                    d[ 'dst_upstream_reversed_resolved_ips' ]
+                                    ,
+                                'reversed_names':
+                                    d[ 'dst_upstream_reversed_names' ]
+                                    ,
                             }
                             for d in
                             self._agnostic_configuration.d_configurations.get(

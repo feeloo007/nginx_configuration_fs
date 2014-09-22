@@ -16,7 +16,11 @@ map $scheme://$host:$server_port$original_uri $upstream_{{ suffix_map }} {
 
     default 	{% if ssl_configuration %}https{% else -%}http{% endif -%}://{{ server }}:{{ port }}/__NO_CONFIGURATION__.html;
     {% for mount in mount_configurations -%}
+    {% if not mount.dst.extra.balanced_sticky_style or mount.dst_upstream_reversed_names|length == 1 -%}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst_upstream }}_with_connect_defined_to_;
+    {% else -%}
+    {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} $upstream_{{ mount.dst_upstream_name }}_with_scheme_defined_to_{{ mount.dst_scheme }}_with_balanced_sticky_defined_to_{{ mount.dst.extra.balanced_sticky_style }}_with_connect_defined_to_;
+    {% endif -%}
     {% endfor -%}
 
 }
@@ -224,6 +228,7 @@ map $scheme://$host:$server_port$original_uri $mdp_service_redirector_new_http_h
     default     "{{ extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_code.default }}";
 
     {% for mount in mount_configurations -%}
+    # {{ mount.dst.extra }}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_code }};
     {% endfor -%}
 }
