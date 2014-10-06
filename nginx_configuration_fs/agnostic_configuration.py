@@ -18,6 +18,8 @@ import 	pprint
 
 import 	dns.resolver
 
+import  dns.reversename
+
 from 	contextlib   		import closing
 
 import	colorama
@@ -125,13 +127,73 @@ class AgnosticConfiguration(
         def get_ips_for_upstream( host ):
 
             l_ips = []
-            l_ips.extend( [ ip.address for ip in self._resolver.query( host, 'A' ) ] )
-            l_ips.extend( [ '[%s]' % ( ip.address ) for ip in self._resolver.query( host, 'AAAA' ) ] )
+            l_ips.extend( [ ip.address.lower() for ip in self._resolver.query( host, 'A' ) ] )
+            l_ips.extend( [ '[%s]' % ( ip.address ).lower() for ip in self._resolver.query( host, 'AAAA' ) ] )
 
             if not l_ips:
                l_bad_configurations.append( ( '%s not resolvable' % ( host ), self._root_configuration, server, port, self._mount_filename ) )
 
             return l_ips
+
+        def get_reversed_resolved_ips_for_upstream( host ):
+
+            return 	\
+                dict(
+                    [
+                        (
+                            ip
+                            ,
+                            str(
+                                self._resolver.query(
+                                    dns.reversename.from_address(
+                                        ip.lstrip( '[' ).rstrip( ']' )
+                                    )
+                                    ,
+                                    'PTR'
+                                )[ 0 ]
+                            ).rstrip( '.' ).lower()
+                        )
+                        for
+                            ip
+                        in
+                        get_ips_for_upstream( host )
+                    ]
+                )
+
+        def get_reversed_names_for_upstream( host ):
+
+            return	\
+                dict(
+                    [
+                        (
+                             hostname
+                             ,
+                             get_ips_for_upstream( hostname )
+                        )
+                        for
+                            hostname
+                        in
+                            list(
+                                set(
+                                    [
+                                        str(
+                                            self._resolver.query(
+                                                dns.reversename.from_address(
+                                                    ip.lstrip( '[' ).rstrip( ']' )
+                                                )
+                                                ,
+                                                'PTR'
+                                            )[ 0 ]
+                                        ).rstrip( '.' ).lower()
+                                        for
+                                            ip
+                                        in
+                                        get_ips_for_upstream( host )
+                                    ]
+                                )
+                            )
+                    ]
+                )
 
         def get_upstream_name( d ):
             return '%s__%s_%s__%s' % (
@@ -215,6 +277,10 @@ class AgnosticConfiguration(
                             get_upstream_url( d ),
                         'dst_upstream_resolved_ips':
                             get_ips_for_upstream( d[ 'dst_host' ] ),
+                        'dst_upstream_reversed_resolved_ips':
+                            get_reversed_resolved_ips_for_upstream( d[ 'dst_host' ] ),
+                        'dst_upstream_reversed_names':
+                            get_reversed_names_for_upstream( d[ 'dst_host' ] ),
                         'proxy_redirect_to_replace_with_port':
                             get_proxy_redirect_to_replace_url_with_port( d ),
                         'proxy_redirect_to_replace_without_port':

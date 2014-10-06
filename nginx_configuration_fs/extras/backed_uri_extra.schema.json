@@ -50,5 +50,12 @@
                                "enum"          : [ "http", "https", "same" ],
                                "default"       : "same"
                           }
+                          ,
+             "balanced_sticky_style"    :
+                          {
+                               "type"          : "string",
+                               "enum"          : [ "", "cookie_JSESSSIONID" ],
+                               "default"       : ""
+                          }
         }
 }

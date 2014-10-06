@@ -14,17 +14,36 @@ log_format backend_failed_{{ server }}-{{ port }} '$remote_addr [$time_local] '
 # TODO - IMPLEMENTER UN SERVEUR TECHNIQUE INDIQUANT QUE LE DNS N'EST PAS RESOLVABLE
 
 {% else %}
-{% for client_http_connect in extra_from_distrib_configurations.backed_uri_extra.properties.client_http_connect.enum %}
-upstream {{ upstream.name }}_with_connect_defined_to_{{ client_http_connect }} {
-    # resolution de {{ upstream.name }} valide au rafraichissement de FS
-    {% for ip in upstream.ips -%}
-    server {{ ip }}:{{ upstream.port }};
+{% for client_http_connect in extra_from_distrib_configurations.backed_uri_extra.properties.client_http_connect.enum -%}
+{% for balanced_sticky_style in ( extra_from_distrib_configurations.backed_uri_extra.properties.balanced_sticky_style.enum if upstream.reversed_names|length > 1 else [ '' ] ) -%}
+{% for reversed_name in ( upstream.reversed_names.keys()|sort if upstream.reversed_names|length > 1 and balanced_sticky_style != '' else [ upstream.reversed_names.keys()[ 0 ] ] ) -%}
+upstream {{ upstream.name }}{%if balanced_sticky_style %}_with_balanced_sticky_{{ balanced_sticky_style }}_for_{{ reversed_name }}{% endif %}_with_connect_defined_to_{{ client_http_connect }} {
+    # resolution de upstream {{ upstream.name }}{%if balanced_sticky_style %}_with_balanced_sticky_{{ balanced_sticky_style }}_for_{{ reversed_name }}{% endif %}_with_connect_defined_to_{{ client_http_connect }} valide au rafraichissement de FS
+    {% for ip in upstream.ips|sort -%}
+    server {{ ip }}:{{ upstream.port }} {% if ip not in upstream.reversed_names[ reversed_name ] and balanced_sticky_style %}backup{% endif %};		# {{ upstream.reversed_ips[ ip ] }}
     {% endfor -%}
     {% if client_http_connect == "" -%}
     keepalive 16;
     {% endif -%}
 }
-{%endfor -%}
+
+{% endfor -%}
+{% endfor -%}
+{% endfor -%}
+
+{% for client_http_connect in ( extra_from_distrib_configurations.backed_uri_extra.properties.client_http_connect.enum if upstream.reversed_names|length > 1 else [] ) -%}
+{% for balanced_sticky_style in ( extra_from_distrib_configurations.backed_uri_extra.properties.balanced_sticky_style.enum if upstream.reversed_names|length > 1 else [] ) -%}
+{% for scheme in ( [ 'http', 'https' ] if balanced_sticky_style != '' else [] ) -%}
+map $route_cookie_jsessionid_{{ suffix_map }} $upstream_{{ upstream.name }}_with_scheme_defined_to_{{ scheme }}_with_balanced_sticky_defined_to_{{ balanced_sticky_style }}_with_connect_defined_to_{{ client_http_connect }} {
+    default {{ scheme }}://{{ upstream.name }}_with_connect_defined_to_;
+    {% for reversed_name in ( upstream.reversed_names.keys()|sort if upstream.reversed_names|length > 1 and balanced_sticky_style != '' else [] ) -%}
+    ~*^{{ reversed_name }}$ {{ scheme }}://{{ upstream.name }}_with_balanced_sticky_{{ balanced_sticky_style }}_for_{{ reversed_name }}_with_connect_defined_to_;
+    {% endfor -%}
+}
+
+{% endfor -%}
+{% endfor -%}
+{% endfor -%}
 {% endif -%}
 {% endfor -%}
 
@@ -312,4 +331,9 @@ map $http_upgrade $connection_upgrade_{{ suffix_map }} {
     default     upgrade;
     ''          $connection_{{ suffix_map }};
 
+}
+
+map $cookie_jsessionid $route_cookie_jsessionid_{{ suffix_map }} {
+    default     "";
+    ~^[^\.]*\.(?P<route>.*)$ $route;
 }
