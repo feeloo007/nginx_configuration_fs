@@ -228,7 +228,6 @@ map $scheme://$host:$server_port$original_uri $mdp_service_redirector_new_http_h
     default     "{{ extra_from_distrib_configurations.backed_uri_extra.properties.mdp_service_redirector_new_http_host_http_redirected_code.default }}";
 
     {% for mount in mount_configurations -%}
-    # {{ mount.dst.extra }}
     {{ listening_uri_extra.is_case_sensitive( mount.src.extra ) }}^{{ mount.src }} {{ mount.dst.extra.mdp_service_redirector_new_http_host_http_redirected_code }};
     {% endfor -%}
 }

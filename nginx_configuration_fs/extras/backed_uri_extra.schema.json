@@ -54,7 +54,7 @@
              "balanced_sticky_style"    :
                           {
                                "type"          : "string",
-                               "enum"          : [ "" ],
+                               "enum"          : [ "", "cookie_JSESSSIONID" ],
                                "default"       : ""
                           }
         }
