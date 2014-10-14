@@ -2,7 +2,7 @@
 {% import 'backed_uri_extra.tpl' as backed_uri_extra with context %}
 log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_local] "$request" '
                  '$status $body_bytes_sent "$http_referer" '
-                 '"$http_user_agent" "$scheme://$host:$server_port$request_uri"';
+                 '"$http_user_agent" "$scheme://$host:$server_port$request_uri" $request_time';
 
 log_format backend_failed_{{ server }}-{{ port }} '$remote_addr [$time_local] '
                  '$status $body_bytes_sent $request_time "$scheme://$host:$server_port$request_uri" '
