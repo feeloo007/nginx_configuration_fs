@@ -76,9 +76,8 @@ server {
 
 {% if server == 'Z00-PR-D1-NGV01' and ( port == '80' or port == '1388' or port == '1389' ) %}
     access_log 			/$access_log_provisoire	combined;
-{% else %}
-    access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
 {% endif %}
+    access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
 
