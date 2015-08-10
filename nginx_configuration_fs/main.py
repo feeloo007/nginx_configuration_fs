@@ -24,10 +24,13 @@ import	ssl_configuration
 
 import	url2entity_configuration
 
+import	hook_server_configuration
+
 __NGINX_CONFIGURATION_FS_CONFIG_TEMPLATE__ 	= 'nginx_configuration_fs.config.template'
 __ROOT_AGNOSTIC_CONFIGURATION__			= 'root_agnostic_configuration'
 __ROOT_SSL_CONFIGURATION__			= 'root_ssl_configuration'
 __ROOT_URL2ENTITY_CONFIGURATION__		= 'root_url2entity_configuration'
+__ROOT_HOOK_SERVER_CONFIGURATION__		= 'root_hook_server_configuration'
 __USER_OWNER__					= 'user_owner'
 __GROUP_OWNER__					= 'group_owner'
 __RESOLVER_CONF__				= 'resolver_conf'
@@ -39,6 +42,8 @@ __RESTART_NGINX__				= 'restart_nginx'
 __SSL_CERTIFICATE_FILENAME__			= 'ssl_certificate_filename'
 __SSL_CERTIFICATE_KEY_FILENAME__		= 'ssl_certificate_key_filename'
 __URL2ENTITY_FILENAME__				= 'url2entity_filename'
+__HOOK_SERVER_FILENAMES_LIST__			= 'hook_server_filenames_list'
+
 
 @plac.annotations(
     configuration_path	= 						\
@@ -178,6 +183,22 @@ def main_verify(
         print( '%s not found in %s' % ( __URL2ENTITY_FILENAME__, configuration_path )  )
         sys.exit(20)
 
+    if not d_config.has_key( __ROOT_HOOK_SERVER_CONFIGURATION__ ) :
+        print( '%s not found in %s' % ( __ROOT_HOOK_SERVER_CONFIGURATION__, configuration_path )  )
+        sys.exit(22)
+
+    if not os.path.isdir( d_config[ __ROOT_HOOK_SERVER_CONFIGURATION__ ] ):
+        print( '%s is not a directory' % ( d_config[ __ROOT_HOOK_SERVER_CONFIGURATION__ ] ) )
+        sys.exit(24)
+
+    if not d_config.has_key( __HOOK_SERVER_FILENAMES_LIST__ ) :
+        print( '%s not found in %s' % ( __HOOK_SERVER_FILENAMES_LIST__, configuration_path )  )
+        sys.exit(23)
+
+    if not isinstance( d_config[ __HOOK_SERVER_FILENAMES_LIST__ ], list ):
+        print( '%s must be a list in %s' % ( __HOOK_SERVER_FILENAMES_LIST__, configuration_path )  )
+        sys.exit(25)
+
     return 							\
         {							\
             'uid_owner'			: uid_owner,		\
@@ -238,6 +259,12 @@ def main_process(
                     ssl_conf
                 ),
                 d_config[ __URL2ENTITY_FILENAME__ ],
+                hook_server_configuration.HookServerConfiguration(
+                    d_config[ __ROOT_HOOK_SERVER_CONFIGURATION__ ],
+                    d_config[ __RESOLVER_CONF__ ],
+                    d_config[ __HOOK_SERVER_FILENAMES_LIST__ ],
+                    d_config[ __RESTART_NGINX__ ],
+                ),
             ),
             mountpoint,
             named_mount_options,

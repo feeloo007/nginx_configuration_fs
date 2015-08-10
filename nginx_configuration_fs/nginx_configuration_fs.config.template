@@ -12,5 +12,7 @@
     "ssl_certificate_filename"		: "cert.pem",
     "ssl_certificate_key_filename"	: "cert.key",
     "root_url2entity_configuration"	: "/etc/mdp/entity.d/",
-    "url2entity_filename"		: "url2entity"
+    "url2entity_filename"		: "url2entity",
+    "root_hook_server_configuration"    : "/etc/mdp/hook.d/",
+    "hook_server_filenames_list"        : [ "additional_local_maps", "to_server_beginning", "at_server_ending", "additional_access_logs", "additional_log_formats" ]
 }

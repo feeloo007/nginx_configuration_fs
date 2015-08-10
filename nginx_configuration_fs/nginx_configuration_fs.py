@@ -23,7 +23,7 @@ import 	pyinotify
 
 import  subprocess
 
-from 	jinja2 			import Environment, PackageLoader
+from 	jinja2 			import Environment, PackageLoader, ChoiceLoader
 
 import	shared_infrastructure
 
@@ -71,6 +71,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         ssl_configuration,
         url2entity_configuration,
         url2entity_filename,
+        hook_server_configuration,
     ):
 
         self._agnostic_configuration	= agnostic_configuration
@@ -88,6 +89,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._ssl_configuration		= ssl_configuration
         self._url2entity_configuration	= url2entity_configuration
         self._url2entity_filename		= url2entity_filename
+        self._hook_server_configuration	= hook_server_configuration
 
         self._extra_from_distrib        =                               \
             extra_from_distrib.ExtraFromDistrib(
@@ -104,6 +106,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             (								\
                 self._agnostic_configuration,				\
                 self._url2entity_configuration,				\
+                self._hook_server_configuration,			\
             )
 
         self._pattern_converted_conf_filenames	= \
@@ -123,9 +126,15 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
         self._env				= 	\
             Environment(
                 loader	= 			  	\
-                    PackageLoader( 
-                        __name__, 
-                        'templates'
+                    ChoiceLoader(
+                        [
+                            PackageLoader(
+                                __name__,
+                                'templates'
+                            )
+                            ,
+                            self._hook_server_configuration
+                        ]
                     )
             )
 
@@ -318,6 +327,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             len( self._agnostic_configuration.l_bad_configurations ) 	+  	\
             len( self._url2entity_configuration.l_bad_configurations )  +	\
             len( self._ssl_configuration.l_bad_configurations )		+	\
+            len( self._hook_server_configuration.l_bad_configurations )	+	\
             len( self._extra_from_distrib.l_bad_configurations )		\
             != 0
     have_bad_configurations = property( get_have_bad_configurations, None, None )
@@ -639,6 +649,7 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
             self._agnostic_configuration._root_configuration,
             self._url2entity_configuration._root_configuration,
             self._ssl_configuration._root_ssl_configuration,
+            self._hook_server_configuration._root_configuration,
             self._extra_from_distrib._root_extras,
             'FS',
         ]
@@ -650,6 +661,8 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                self._url2entity_configuration.l_bad_configurations,
            self._ssl_configuration._root_ssl_configuration:
                self._ssl_configuration.l_bad_configurations,
+           self._hook_server_configuration._root_configuration:
+               self._hook_server_configuration.l_bad_configurations,
            'FS':
                self.l_bad_configurations,
            self._extra_from_distrib._root_extras:
@@ -733,6 +746,17 @@ class NGINXConfigurationFS(LoggingMixIn, Operations):
                     self._root_nginx_configuration.rstrip( os.sep ) + os.sep,
                 ssl_configuration		= \
                     self._ssl_configuration.get_ssl_configuration( server, port ),
+                hook_server_configuration	= \
+                    self._hook_server_configuration.d_configurations.get(
+                        server
+                        ,
+                        {}
+                    ).get(
+                        port
+                        ,
+                        {}
+                    )
+                ,
                 upstream_configuration 		= \
                     filter(
                         lambda d: d[ 'name' ] not in l_uniq_upstream
