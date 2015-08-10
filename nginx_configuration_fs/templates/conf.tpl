@@ -1,5 +1,11 @@
 {% import 'redirected_uri_extra.tpl' as redirected_uri_extra with context %}
 {% import 'backed_uri_extra.tpl' as backed_uri_extra with context %}
+{% if hook_server_configuration.additional_log_formats %}
+#  HOOK- : {{ hook_server_configuration.additional_log_formats.path }}
+{% include hook_server_configuration.additional_log_formats.path with context %}
+# -HOOK  : {{ hook_server_configuration.additional_log_formats.path }}
+{% endif %}
+
 log_format access_{{ server }}-{{ port }} '$remote_addr - $remote_user [$time_local] "$request" '
                  '$status $body_bytes_sent "$http_referer" '
                  '"$http_user_agent" "$scheme://$host:$server_port$request_uri" $request_time';
@@ -49,6 +55,12 @@ map $route_cookie_jsessionid_{{ suffix_map }} $upstream_{{ upstream.name }}_with
 
 server {
 
+    {% if hook_server_configuration.to_server_beginning %}
+    #  HOOK- : {{ hook_server_configuration.to_server_beginning.path }}
+    {% include hook_server_configuration.to_server_beginning.path with context %}
+    # -HOOK  : {{ hook_server_configuration.to_server_beginning.path }}
+    {% endif %}
+
     server_tokens 		off;
 
     {% for nameserver in resolver.nameservers -%}
@@ -74,6 +86,11 @@ server {
 
     {% endif -%}
 
+    {% if hook_server_configuration.additional_access_logs %}
+    #  HOOK- : {{ hook_server_configuration.additional_access_logs.path }}
+    {% include hook_server_configuration.additional_access_logs.path with context %}
+    # -HOOK  : {{ hook_server_configuration.additional_access_logs.path }}
+    {% endif %}
     access_log 			/var/log/nginx/.{{ server }}-{{ port }}.access.log access_{{ server }}-{{ port }};
     error_log 			/var/log/nginx/.{{ server }}-{{ port }}.error.log info;
      
@@ -219,6 +236,13 @@ server {
         # s'affichait avant d'eclater en $backend_
         return {{ backend_combination[ "index" ] }};
         {% endcall -%}
+
+    {% if hook_server_configuration.at_server_ending %}
+    #  HOOK- : {{ hook_server_configuration.at_server_ending.path }}
+    {% include hook_server_configuration.at_server_ending.path with context %}
+    # -HOOK  : {{ hook_server_configuration.at_server_ending.path }}
+    {% endif %}
+
     }
 
     {% call( backend_combination ) backed_uri_extra.loop_on_backend_combination() %}
@@ -287,6 +311,12 @@ server {
     {% endif %}
 
 }
+
+{% if hook_server_configuration.additional_local_maps %}
+#  HOOK- : {{ hook_server_configuration.additional_local_maps.path }}
+{% include hook_server_configuration.additional_local_maps.path with context %}
+# -HOOK  : {{ hook_server_configuration.additional_local_maps.path }}
+{% endif %}
 
 {% if converted_unmount_map_filename in list_converted_map_filenames -%}
 include {{ root_nginx_configuration }}{{ converted_unmount_map_filename }};
